@@ -150,21 +150,6 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
     }
   };
 
-  // Status Bar
-  const StatusBar = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '8px 24px',
-      fontSize: '14px',
-      color: 'white'
-    }}>
-      <span style={{ fontWeight: '600' }}>9:27</span>
-      <div>📶🔋</div>
-    </div>
-  );
-
   // Header
   const Header = ({ title, showBack = true }) => (
     <div style={{
@@ -204,22 +189,20 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
     const messages = ['All set! Let\'s get right into it.', 'Getting you verified.', 'Complete!'];
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#000', color: 'white' }}>
-        <StatusBar />
-        <div style={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          padding: '40px',
-          minHeight: 'calc(100vh - 50px)'
-        }}>
-          <div style={{ marginBottom: '32px', fontSize: '48px' }}>🎉</div>
-          <h2 style={{ fontSize: '18px', fontWeight: '500', margin: 0, color: '#e5e7eb', textAlign: 'center' }}>
-            {messages[loadingStep]}
-          </h2>
-        </div>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#000', 
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px'
+      }}>
+        <div style={{ marginBottom: '32px', fontSize: '48px' }}>🎉</div>
+        <h2 style={{ fontSize: '18px', fontWeight: '500', margin: 0, color: '#e5e7eb', textAlign: 'center' }}>
+          {messages[loadingStep]}
+        </h2>
       </div>
     );
   }
@@ -228,10 +211,13 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
   if (currentStep === 0) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#000', color: 'white' }}>
-        <StatusBar />
         <Header title="Create an account" showBack={false} />
         
-        <div style={{ padding: '32px 24px' }}>
+        <div style={{ 
+          padding: '32px 24px',
+          maxWidth: '480px',
+          margin: '0 auto'
+        }}>
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -317,10 +303,13 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
   if (currentStep === 1) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#000', color: 'white' }}>
-        <StatusBar />
         <Header title="Create an account" />
         
-        <div style={{ padding: '32px 24px' }}>
+        <div style={{ 
+          padding: '32px 24px',
+          maxWidth: '480px',
+          margin: '0 auto'
+        }}>
           <div style={{ marginBottom: '24px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>Basic Information</h2>
             <p style={{ color: '#9ca3af', fontSize: '14px' }}>Let's get to know you, shall we?</p>
@@ -395,10 +384,14 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
   if (currentStep === 2) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#000', color: 'white' }}>
-        <StatusBar />
         <Header title="Create an account" />
         
-        <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+        <div style={{ 
+          padding: '32px 24px', 
+          textAlign: 'center',
+          maxWidth: '480px',
+          margin: '0 auto'
+        }}>
           <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>OTP Verification</h2>
           <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '32px' }}>
             We have sent a verification code to<br />
@@ -482,10 +475,14 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
   if (currentStep === 3) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#000', color: 'white' }}>
-        <StatusBar />
         <Header title="Create an account" />
         
-        <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+        <div style={{ 
+          padding: '32px 24px', 
+          textAlign: 'center',
+          maxWidth: '480px',
+          margin: '0 auto'
+        }}>
           <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>OTP Verification</h2>
           <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '32px' }}>
             We have sent a verification code to<br />
@@ -544,10 +541,13 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
   if (currentStep === 4) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#000', color: 'white' }}>
-        <StatusBar />
         <Header title="Create an account" />
         
-        <div style={{ padding: '32px 24px' }}>
+        <div style={{ 
+          padding: '32px 24px',
+          maxWidth: '480px',
+          margin: '0 auto'
+        }}>
           <div style={{ marginBottom: '24px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>Almost done</h2>
             <p style={{ color: '#9ca3af', fontSize: '14px' }}>Secure your account</p>
@@ -640,36 +640,58 @@ const SignUpFlow = ({ onSignUp, onLogin, onBack }) => {
   // Step 5: Success Screen
   if (currentStep === 5) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#000', color: 'white', display: 'flex', flexDirection: 'column' }}>
-        <StatusBar />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '120px', height: '120px', backgroundColor: '#059669', borderRadius: '50%', marginBottom: '32px' }}>
-            <Check size={60} color="white" />
-          </div>
-
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', textAlign: 'center', marginBottom: '16px', lineHeight: '1.3' }}>
-            Your phone number has been verified successfully.
-          </h2>
-
-          <button
-            onClick={completeSignUp}
-            style={{
-              width: '100%',
-              maxWidth: '300px',
-              padding: '16px',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              marginTop: '32px'
-            }}
-          >
-            Continue to App
-          </button>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#000', 
+        color: 'white', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          width: '120px', 
+          height: '120px', 
+          backgroundColor: '#059669', 
+          borderRadius: '50%', 
+          marginBottom: '32px' 
+        }}>
+          <Check size={60} color="white" />
         </div>
+
+        <h2 style={{ 
+          fontSize: '24px', 
+          fontWeight: 'bold', 
+          textAlign: 'center', 
+          marginBottom: '16px', 
+          lineHeight: '1.3',
+          maxWidth: '360px'
+        }}>
+          Your phone number has been verified successfully.
+        </h2>
+
+        <button
+          onClick={completeSignUp}
+          style={{
+            width: '100%',
+            maxWidth: '300px',
+            padding: '16px',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            marginTop: '32px'
+          }}
+        >
+          Continue to App
+        </button>
       </div>
     );
   }

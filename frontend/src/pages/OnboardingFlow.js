@@ -150,27 +150,6 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
       backgroundColor: '#000',
       color: 'white'
     }}>
-      {/* Status Bar */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '8px 24px',
-        fontSize: '14px'
-      }}>
-        <span style={{ fontWeight: '600' }}>9:27</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <div style={{ display: 'flex', gap: '2px' }}>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: '2px' }}></div>
-          </div>
-          <span style={{ marginLeft: '8px' }}>📶</span>
-          <span>🔋</span>
-        </div>
-      </div>
-
       {/* Logo and Title */}
       <div style={{
         display: 'flex',
@@ -220,20 +199,19 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
               background: 'linear-gradient(to bottom, #111827, #000)',
               padding: '16px'
             }}>
-              {/* Mock App Interface */}
+              {/* Mock App Header */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justifyContent: 'center',
                 marginBottom: '16px',
-                fontSize: '10px'
+                paddingBottom: '8px',
+                borderBottom: '1px solid #374151'
               }}>
-                <div style={{ color: '#9ca3af' }}>9:27</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Trophy size={12} color="#60a5fa" />
-                  <span style={{ color: 'white' }}>PlayerBet</span>
+                  <Trophy size={16} color="#60a5fa" />
+                  <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>PlayerBet</span>
                 </div>
-                <div style={{ color: '#9ca3af' }}>📶🔋</div>
               </div>
               
               {/* Navigation Tabs */}
@@ -400,7 +378,7 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '16px', maxWidth: '400px', margin: '0 auto' }}>
           <button
             onClick={handleLogin}
             style={{

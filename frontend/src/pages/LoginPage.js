@@ -23,14 +23,16 @@ const LoginFlow = ({ onLogin, onSignUp, onBack }) => {
       setIsLoading(false);
       
       // Simulate login validation (replace with real API call)
-      if (email === 'demo@playerbet.com' && password === 'password123') {
-        // Success - navigate to dashboard
-        onLogin({ email, name: 'Demo User' });
-      } else {
-        // Show error
-        setErrorMessage("Sorry we couldn't find your details. Please double-check or Reset Password");
-        setShowError(true);
-      }
+    //   if (email === 'demo@playerbet.com' && password === 'password123') {
+    //     // Success - navigate to dashboard
+    //     onLogin({ email, name: 'Demo User' });
+    //   } else {
+    //     // Show error
+    //     setErrorMessage("Sorry we couldn't find your details. Please double-check or Reset Password");
+    //     setShowError(true);
+    //   }
+    onLogin({ email, password, name: 'Demo User' });
+
     }, 2000);
   };
 
@@ -65,31 +67,6 @@ const LoginFlow = ({ onLogin, onSignUp, onBack }) => {
         justifyContent: 'center',
         padding: '20px'
       }}>
-        {/* Status Bar */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '8px 24px',
-          fontSize: '14px'
-        }}>
-          <span style={{ fontWeight: '600' }}>9:27</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{ display: 'flex', gap: '2px' }}>
-              <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-              <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-              <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-              <div style={{ width: '4px', height: '12px', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: '2px' }}></div>
-            </div>
-            <span style={{ marginLeft: '8px' }}>📶</span>
-            <span>🔋</span>
-          </div>
-        </div>
-
         {/* Loading Animation */}
         <div style={{
           display: 'flex',
@@ -161,33 +138,15 @@ const LoginFlow = ({ onLogin, onSignUp, onBack }) => {
       flexDirection: 'column',
       position: 'relative'
     }}>
-      {/* Status Bar */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '8px 24px',
-        fontSize: '14px'
-      }}>
-        <span style={{ fontWeight: '600' }}>9:27</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <div style={{ display: 'flex', gap: '2px' }}>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'white', borderRadius: '2px' }}></div>
-            <div style={{ width: '4px', height: '12px', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: '2px' }}></div>
-          </div>
-          <span style={{ marginLeft: '8px' }}>📶</span>
-          <span>🔋</span>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        padding: '40px 32px 32px'
+        padding: '40px 32px 32px',
+        maxWidth: '480px',
+        margin: '0 auto',
+        width: '100%'
       }}>
         {/* Header with Logo */}
         <div style={{
@@ -497,7 +456,7 @@ const LoginFlow = ({ onLogin, onSignUp, onBack }) => {
           onClick={onBack}
           style={{
             position: 'fixed',
-            top: '50px',
+            top: '20px',
             left: '20px',
             backgroundColor: 'rgba(255, 255, 255, 0.2)',
             color: 'white',

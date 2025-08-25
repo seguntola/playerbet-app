@@ -50,3 +50,76 @@ bld/
 # OS
 .DS_Store
 Thumbs.db
+EOF
+
+# Create README.md
+cat > README.md << 'EOF'
+# PlayerBet - Sports Betting Platform
+
+A modern sports betting web application built with React frontend and .NET backend with PostgreSQL database.
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- .NET 8.0 SDK
+- PostgreSQL 14+
+- Docker (optional)
+
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### Backend Setup
+```bash
+cd backend/PlayerBet.Api
+dotnet restore
+dotnet run
+```
+
+### Docker Setup
+```bash
+docker-compose up -d
+```
+
+## Project Structure
+
+```
+playerbet-app/
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── services/
+│   │   └── utils/
+│   └── public/
+├── backend/
+│   ├── PlayerBet.Api/
+│   │   ├── Controllers/
+│   │   ├── Models/
+│   │   ├── Data/
+│   │   ├── Services/
+│   │   └── Middleware/
+│   └── PlayerBet.Tests/
+└── docker-compose.yml
+```
+
+## Features
+
+- Modern React frontend with Tailwind CSS
+- .NET 8 Web API backend
+- PostgreSQL database
+- Docker containerization
+- JWT authentication
+- Real-time sports betting
+
+## Technology Stack
+
+- **Frontend**: React 18, Tailwind CSS, Lucide React
+- **Backend**: .NET 8, Entity Framework Core
+- **Database**: PostgreSQL
+- **DevOps**: Docker, Docker Compose
