@@ -4,7 +4,6 @@ import OnboardingFlow from './pages/OnboardingFlow';
 import LoginFlow from './pages/LoginPage';
 import SignUpFlow from './pages/SignUpPage';
 import Dashboard from './pages/Dashboard';
-import BettingPage from './pages/BettingPage';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -88,11 +87,6 @@ function App() {
   const navigateToDashboard = () => {
     addDebugLog('Navigating to dashboard');
     setCurrentPage('dashboard');
-  };
-  
-  const navigateToBetting = () => {
-    addDebugLog('Navigating to betting');
-    setCurrentPage('betting');
   };
   
   const navigateToOnboarding = () => {
@@ -271,15 +265,6 @@ const handleSignUp = async (signUpData) => {
           return (
             <Dashboard 
               user={user}
-              onLogout={handleLogout}
-              onNavigateToBetting={navigateToBetting}
-            />
-          );
-        case 'betting':
-          return (
-            <BettingPage 
-              user={user}
-              onBack={navigateToDashboard}
               onLogout={handleLogout}
             />
           );

@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   BASE_URL: __DEV__ 
-    ? 'http://10.0.2.2:5000/api'  // Android emulator
+    ? 'http://localhost:5000/api'  // Android emulator
     : 'https://your-production-api.com/api',  // Production URL
   TIMEOUT: 10000,
 };
