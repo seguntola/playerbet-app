@@ -1,189 +1,208 @@
-# PlayerBet - Sports Betting Platform
+# PlayerBet - Full Stack Sports Betting Platform
 
-A modern sports betting platform with flexible bet types: **Smart Play** and **Perfect Pick**.
+A complete sports betting application with web frontend, mobile app, and .NET backend.
 
-## Features
+## 🏗️ Architecture
 
-### Bet Types
-- **Smart Play**: Flexible betting with partial payouts
-  - Up to 8 picks maximum
-  - 1-2 losses = 60% or 25% payout (respectively)
-  - 3+ losses = complete loss
-  - Lower risk, decent rewards
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Mobile App    │    │    Web App      │    │   Backend API   │
+│  (React Native)│    │    (React)      │    │   (.NET Core)   │
+│                 │    │                 │    │                 │
+│ • iOS App       │    │ • Web Browser   │    │ • Controllers   │
+│ • Android App   │────┼─• Responsive UI │────┤ • Services      │
+│ • Expo Runtime  │    │ • PWA Ready     │    │ • Database      │
+│                 │    │                 │    │ • Authentication│
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 │
+                    ┌─────────────────┐
+                    │   PostgreSQL    │
+                    │    Database     │
+                    └─────────────────┘
+```
 
-- **Perfect Pick**: Traditional parlay betting  
-  - Up to 12 picks maximum
-  - ALL picks must win to cash out
-  - One loss = entire bet loses
-  - Higher risk, higher rewards
+## 🚀 Getting Started
 
-### Platform Features
-- User registration and authentication
-- Real-time balance tracking
-- Comprehensive betting history
-- Mobile-responsive design
-- Modern, attractive UI
+### Backend (.NET API)
+```bash
+cd backend
+dotnet run --project PlayerBet.Api
+```
 
-## Technology Stack
+### Frontend (React Web App)
+```bash
+cd frontend
+npm install
+npm start
+```
 
-### Backend
-- **Framework**: ASP.NET Core 8.0
-- **Database**: PostgreSQL
-- **ORM**: Entity Framework Core
-- **Authentication**: JWT-based (simplified for demo)
+### Mobile (React Native)
+```bash
+cd mobile
+npm install
+npm start
+```
+
+## 📱 Mobile App Features
+
+- ✅ **Cross-platform** - iOS and Android
+- ✅ **Native performance** - Built with React Native/Expo
+- ✅ **Shared backend** - Same API as web app
+- ✅ **Complete betting interface** - Player props, betting slip, multiple bet modes
+- ✅ **User authentication** - Login, registration, session management
+- ✅ **User profiles** - Betting history, statistics, account management
+- ✅ **Modern UI/UX** - Dark theme, animations, responsive design
+
+## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: React 19
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Build Tool**: Create React App
+- **Web**: React 18, JavaScript, CSS
+- **Mobile**: React Native, Expo
 
-## Project Structure
+### Backend
+- **.NET Core 8** - RESTful API
+- **PostgreSQL** - Database
+- **Entity Framework Core** - ORM
+- **JWT Authentication**
+
+### DevOps
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
+
+## 📂 Project Structure
 
 ```
-PlayerBet/
-├── backend/
+playerbet/
+├── 📁 backend/           # .NET Core API
 │   ├── PlayerBet.Api/
-│   │   ├── Controllers/
-│   │   ├── Data/
-│   │   ├── DTOs/
-│   │   ├── Middleware/
-│   │   ├── Models/
-│   │   ├── Services/
-│   │   ├── Program.cs
-│   │   └── PlayerBet.Api.csproj
-│   ├── Dockerfile
-│   └── docker-compose.yml
-└── frontend/
-    ├── public/
-    ├── src/
-    │   ├── pages/
-    │   ├── App.js
-    │   └── index.js
-    ├── package.json
-    └── tailwind.config.js
+│   ├── docker-compose.yml
+│   └── Dockerfile
+├── 📁 frontend/          # React Web App
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── 📁 mobile/           # React Native Mobile App
+│   ├── src/
+│   │   ├── screens/     # App screens
+│   │   ├── services/    # API layer
+│   │   ├── context/     # State management
+│   │   └── utils/       # Helpers
+│   ├── App.js
+│   └── package.json
+└── README.md
 ```
 
-## Quick Start
+## 🔧 Development Setup
 
 ### Prerequisites
-- Node.js 18+ and npm
-- .NET 8.0 SDK
-- PostgreSQL (or Docker)
+- Node.js 16+
+- .NET 8 SDK
+- PostgreSQL
+- Expo CLI (for mobile)
 
-### Option 1: Docker Setup (Recommended)
+### Environment Variables
+Create `.env` files in each directory:
 
-1. **Clone and navigate to backend directory**
-   ```bash
-   cd backend
-   ```
-
-2. **Start services with Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
-   This starts:
-   - PostgreSQL database on port 5432
-   - Backend API on port 5000
-
-3. **Start frontend**
-   ```bash
-   cd ../frontend
-   npm install
-   npm start
-   ```
-   Frontend runs on port 3000
-
-### Option 2: Local Development Setup
-
-#### Backend Setup
-
-1. **Install PostgreSQL** (if not using Docker)
-   - Create database named `PlayerBetDb`
-   - Update connection string in `appsettings.json`
-
-2. **Navigate to backend directory**
-   ```bash
-   cd backend/PlayerBet.Api
-   ```
-
-3. **Restore packages**
-   ```bash
-   dotnet restore
-   ```
-
-4. **Run database migrations**
-   ```bash
-   dotnet ef database update
-   ```
-
-5. **Start the API**
-   ```bash
-   dotnet run
-   ```
-   API will be available at `http://localhost:5000`
-
-#### Frontend Setup
-
-1. **Navigate to frontend directory**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start development server**
-   ```bash
-   npm start
-   ```
-   Frontend will be available at `http://localhost:3000`
-
-## Configuration
-
-### Backend Configuration
-
-Update `appsettings.json` for your environment:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=PlayerBetDb;Username=postgres;Password=your_password;Port=5432"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  }
-}
+**Backend**:
+```env
+ConnectionString=Host=localhost;Database=PlayerBetDb;Username=your_user;Password=your_password
+JWT_SECRET=your_jwt_secret_key
 ```
 
-### Frontend Configuration
+**Mobile** (optional):
+```env
+API_BASE_URL=http://localhost:5000/api
+```
 
-The frontend is configured to connect to the backend at `http://localhost:5000`. Update the `API_BASE_URL` in `src/App.js` if needed.
+## 🚦 Running the Full Stack
 
-## Database Schema
+1. **Start Database**:
+   ```bash
+   cd backend
+   docker-compose up postgres
+   ```
 
-### Users Table
-- User account information
-- Authentication credentials
+2. **Start Backend**:
+   ```bash
+   cd backend
+   dotnet run --project PlayerBet.Api
+   ```
+
+3. **Start Web Frontend**:
+   ```bash
+   cd frontend
+   npm start
+   ```
+
+4. **Start Mobile App**:
+   ```bash
+   cd mobile
+   npm start
+   ```
+
+## 📱 Mobile Development
+
+### Running on Device/Emulator
+- **iOS**: Requires macOS with Xcode
+- **Android**: Requires Android Studio or physical device
+- **Development**: Use Expo Go app for quick testing
+
+### Building for Production
+```bash
+cd mobile
+expo build:android  # Android APK/AAB
+expo build:ios      # iOS IPA
+```
+
+## 🔐 Authentication Flow
+
+1. User registers/logs in via web or mobile
+2. Backend issues JWT token
+3. Token stored locally (localStorage/AsyncStorage)
+4. Token sent with API requests
+5. Backend validates token for protected routes
+
+## 🎯 Key Features
+
+### Betting System
+- **Beast Mode**: High risk, high reward betting
+- **Safety Play**: More forgiving with partial payouts
+- **Player Props**: Bet on individual player statistics
+- **Live Updates**: Real-time game and odds updates
+
+### User Management
+- User registration and authentication
+- Profile management
+- Betting history and statistics
 - Balance tracking
-- Profile data
 
-### Bets Table
-- Bet information and status
-- Bet types (Smart Play vs Perfect Pick)
-- Payout calculations
+## 🚀 Deployment
 
-### BetPicks Table
-- Individual picks within each bet
-- Player statistics and lines
-- Pick outcomes
+### Backend
+- Deploy to cloud platforms (Azure, AWS, Google Cloud)
+- Use Docker containers for consistent deployment
+- Configure PostgreSQL database connection
 
-## API Endpoints
+### Frontend Web
+- Build: `npm run build`
+- Deploy to static hosting (Netlify, Vercel, AWS S3)
+
+### Mobile App
+- **iOS**: Submit to App Store via App Store Connect
+- **Android**: Publish to Google Play Store
+- **OTA Updates**: Use Expo's over-the-air update system
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## 📄 API Endpoints
 
 ### Authentication
 - `POST /api/users/register` - User registration
@@ -191,156 +210,50 @@ The frontend is configured to connect to the backend at `http://localhost:5000`.
 - `GET /api/users/{id}` - Get user profile
 
 ### Betting
-- `POST /api/bets` - Place a new bet
-- `GET /api/bets/user/{userId}` - Get user's betting history
-- `GET /api/bets/{betId}` - Get specific bet details
+- `POST /api/bets` - Create new bet
+- `GET /api/bets/user/{userId}` - Get user's bets
 - `POST /api/bets/calculate-payout` - Calculate potential payout
 
 ### Games
-- `GET /api/games` - Get available games and odds
+- `GET /api/games` - Get available games and player props
 
-## Demo Credentials
+## 🎨 Design System
 
-For testing purposes, you can create a new account which will automatically receive a $1000 bonus balance.
+### Colors
+- **Primary**: Blue (#2563eb)
+- **Secondary**: Purple (#7c3aed)
+- **Success**: Green (#10b981)
+- **Warning**: Orange (#f59e0b)
+- **Error**: Red (#ef4444)
+- **Background**: Black (#000000)
+- **Surface**: Dark Gray (#1f2937)
 
-## Bet Type Rules
+### Typography
+- **Headings**: Bold, high contrast
+- **Body**: Medium weight, good readability
+- **Labels**: Small, muted colors
 
-### Smart Play Rules
-- **Flexibility**: Partial payouts on partial wins
-- **Payout Structure**:
-  - All picks win: 100% of potential payout
-  - 1 pick loses: 60% of potential payout
-  - 2 picks lose: 25% of potential payout
-  - 3+ picks lose: 0% payout (bet lost)
-- **Maximum picks**: 8
-- **Multipliers**: Lower base multipliers for safety
+## 📊 Future Enhancements
 
-### Perfect Pick Rules
-- **All-or-Nothing**: Must win all picks to receive payout
-- **Payout Structure**:
-  - All picks win: 100% of potential payout
-  - Any pick loses: 0% payout (bet lost)
-- **Maximum picks**: 12
-- **Multipliers**: Higher multipliers for bigger risks
+- [ ] Push notifications for bet results
+- [ ] Social features (friend betting, leaderboards)
+- [ ] Advanced analytics and insights
+- [ ] Live streaming integration
+- [ ] Cryptocurrency payments
+- [ ] Multi-language support
+- [ ] Biometric authentication (mobile)
 
-## Development
+## 📞 Support
 
-### Adding New Features
+For questions and support:
+- Create an issue in this repository
+- Check the documentation in each project folder
+- Review the API documentation
 
-1. **Backend Changes**:
-   - Add models to `Models/`
-   - Create services in `Services/`
-   - Add controllers in `Controllers/`
-   - Run migrations: `dotnet ef migrations add MigrationName`
+## 📜 License
 
-2. **Frontend Changes**:
-   - Add components to `src/pages/` or `src/components/`
-   - Update routing in `App.js`
-   - Add new API calls as needed
-
-### Database Migrations
-
-To create a new migration:
-```bash
-dotnet ef migrations add MigrationName
-dotnet ef database update
-```
-
-### Running Tests
-
-Backend:
-```bash
-dotnet test
-```
-
-Frontend:
-```bash
-npm test
-```
-
-## Deployment
-
-### Production Environment Variables
-
-**Backend**:
-```env
-ConnectionStrings__DefaultConnection=your_production_db_string
-ASPNETCORE_ENVIRONMENT=Production
-```
-
-**Frontend**:
-```env
-REACT_APP_API_URL=https://your-api-domain.com/api
-```
-
-### Docker Production Deployment
-
-1. Update `docker-compose.yml` for production
-2. Use environment files for sensitive data
-3. Configure reverse proxy (nginx/Apache)
-4. Set up SSL certificates
-5. Configure database backups
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Errors**
-   - Verify PostgreSQL is running
-   - Check connection string format
-   - Ensure database exists
-
-2. **CORS Errors**
-   - Verify frontend URL in CORS policy
-   - Check API endpoints are accessible
-
-3. **Build Errors**
-   - Clear npm/dotnet caches
-   - Verify all dependencies are installed
-   - Check for version compatibility
-
-### Logs
-
-- **Backend logs**: Check console output or configure logging providers
-- **Frontend logs**: Check browser console for errors
-- **Database logs**: Check PostgreSQL logs for connection issues
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch
-3. Make changes with tests
-4. Submit pull request
-
-## Support
-
-For issues or questions:
-1. Check existing issues in repository
-2. Create new issue with detailed description
-3. Include logs and error messages
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-## Architecture Decisions
-
-### Bet Type Implementation
-- **Smart Play**: Implements flexible payout logic with graduated loss tolerance
-- **Perfect Pick**: Traditional parlay with higher risk/reward
-- **Multiplier System**: Dynamic multipliers based on pick count and bet type
-
-### Database Design
-- **Normalized structure**: Separate tables for users, bets, and picks
-- **Audit trails**: Created/updated timestamps on all entities
-- **Constraints**: Unique constraints on email, username, phone
-
-### Security Considerations
-- **Password hashing**: SHA-256 with salt (upgrade to bcrypt for production)
-- **Input validation**: Server-side validation on all endpoints
-- **CORS policy**: Restricted to frontend domains
-
-### Frontend Architecture
-- **Component-based**: Modular React components
-- **State management**: Local state with potential for Redux
-- **Responsive design**: Mobile-first approach with Tailwind
-
-This completes the full-stack sports betting platform with Smart Play and Perfect Pick bet types!
+Built with ❤️ using React, React Native, and .NET Core
