@@ -1,259 +1,183 @@
-# PlayerBet - Full Stack Sports Betting Platform
+# PlayerBet - Modern Sports Betting Platform
 
-A complete sports betting application with web frontend, mobile app, and .NET backend.
+PlayerBet is a comprehensive full-stack sports betting platform featuring web, mobile, and backend applications. The platform specializes in player prop betting with unique bet types including "Beast Mode" (high risk/reward) and "Safety Play" (forgiving payouts).
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Mobile App    │    │    Web App      │    │   Backend API   │
-│  (React Native)│    │    (React)      │    │   (.NET Core)   │
+│  (React Native)│    │    (React)      │    │   (.NET 8)      │
 │                 │    │                 │    │                 │
-│ • iOS App       │    │ • Web Browser   │    │ • Controllers   │
-│ • Android App   │────┼─• Responsive UI │────┤ • Services      │
-│ • Expo Runtime  │    │ • PWA Ready     │    │ • Database      │
-│                 │    │                 │    │ • Authentication│
+│ • iOS/Android   │    │ • Modern React  │    │ • RESTful API   │
+│ • Expo Framework│────┼─• Tailwind CSS │────┤ • Entity Framework│
+│ • Native Performance│  │ • Responsive   │    │ • JWT Auth      │
+│                 │    │                 │    │ • PostgreSQL    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────┐
-                    │   PostgreSQL    │
-                    │    Database     │
-                    └─────────────────┘
 ```
 
-## 🚀 Getting Started
+## Technology Stack
 
-### Backend (.NET API)
-```bash
-cd backend
-dotnet run --project PlayerBet.Api
-```
+### Backend (.NET 8)
+- **Framework**: ASP.NET Core 8.0 Web API
+- **Database**: PostgreSQL with Entity Framework Core 8.0
+- **Authentication**: JWT-based with simplified demo implementation
+- **Architecture**: Controller → Service → Repository pattern
 
-### Frontend (React Web App)
-```bash
-cd frontend
-npm install
-npm start
-```
+### Frontend (React)
+- **Framework**: React 18 with Create React App
+- **Styling**: Tailwind CSS 3.3.2
+- **Icons**: Lucide React 0.263.1
+- **HTTP Client**: Axios 1.4.0
 
 ### Mobile (React Native)
-```bash
-cd mobile
-npm install
-npm start
-```
+- **Framework**: React Native with Expo 53.0.22
+- **Navigation**: React Navigation 6.x
+- **Storage**: AsyncStorage for local data persistence
 
-## 📱 Mobile App Features
-
-- ✅ **Cross-platform** - iOS and Android
-- ✅ **Native performance** - Built with React Native/Expo
-- ✅ **Shared backend** - Same API as web app
-- ✅ **Complete betting interface** - Player props, betting slip, multiple bet modes
-- ✅ **User authentication** - Login, registration, session management
-- ✅ **User profiles** - Betting history, statistics, account management
-- ✅ **Modern UI/UX** - Dark theme, animations, responsive design
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Web**: React 18, JavaScript, CSS
-- **Mobile**: React Native, Expo
-
-### Backend
-- **.NET Core 8** - RESTful API
-- **PostgreSQL** - Database
-- **Entity Framework Core** - ORM
-- **JWT Authentication**
-
-### DevOps
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-
-## 📂 Project Structure
-
-```
-playerbet/
-├── 📁 backend/           # .NET Core API
-│   ├── PlayerBet.Api/
-│   ├── docker-compose.yml
-│   └── Dockerfile
-├── 📁 frontend/          # React Web App
-│   ├── src/
-│   ├── public/
-│   └── package.json
-├── 📁 mobile/           # React Native Mobile App
-│   ├── src/
-│   │   ├── screens/     # App screens
-│   │   ├── services/    # API layer
-│   │   ├── context/     # State management
-│   │   └── utils/       # Helpers
-│   ├── App.js
-│   └── package.json
-└── README.md
-```
-
-## 🔧 Development Setup
+## Quick Start
 
 ### Prerequisites
-- Node.js 16+
-- .NET 8 SDK
-- PostgreSQL
+- Node.js 18+
+- .NET 8.0 SDK
+- PostgreSQL 14+
+- Docker (optional)
 - Expo CLI (for mobile)
 
-### Environment Variables
-Create `.env` files in each directory:
+### Development Setup
 
-**Backend**:
-```env
-ConnectionString=Host=localhost;Database=PlayerBetDb;Username=your_user;Password=your_password
-JWT_SECRET=your_jwt_secret_key
-```
-
-**Mobile** (optional):
-```env
-API_BASE_URL=http://localhost:5000/api
-```
-
-## 🚦 Running the Full Stack
-
-1. **Start Database**:
+1. **Clone and setup:**
    ```bash
-   cd backend
-   docker-compose up postgres
+   git clone <your-repo-url>
+   cd playerbet
+   chmod +x setup.sh
+   ./setup.sh
    ```
 
-2. **Start Backend**:
+2. **Backend:**
    ```bash
-   cd backend
-   dotnet run --project PlayerBet.Api
+   cd backend/PlayerBet.Api
+   dotnet restore
+   dotnet ef database update
+   dotnet run
    ```
 
-3. **Start Web Frontend**:
+3. **Frontend:**
    ```bash
    cd frontend
+   npm install
    npm start
    ```
 
-4. **Start Mobile App**:
+4. **Mobile:**
    ```bash
    cd mobile
+   npm install
    npm start
    ```
 
-## 📱 Mobile Development
-
-### Running on Device/Emulator
-- **iOS**: Requires macOS with Xcode
-- **Android**: Requires Android Studio or physical device
-- **Development**: Use Expo Go app for quick testing
-
-### Building for Production
-```bash
-cd mobile
-expo build:android  # Android APK/AAB
-expo build:ios      # iOS IPA
-```
-
-## 🔐 Authentication Flow
-
-1. User registers/logs in via web or mobile
-2. Backend issues JWT token
-3. Token stored locally (localStorage/AsyncStorage)
-4. Token sent with API requests
-5. Backend validates token for protected routes
-
-## 🎯 Key Features
+## Core Features
 
 ### Betting System
-- **Beast Mode**: High risk, high reward betting
-- **Safety Play**: More forgiving with partial payouts
-- **Player Props**: Bet on individual player statistics
-- **Live Updates**: Real-time game and odds updates
+- **Beast Mode**: All picks must win, higher multipliers (3x to 150x)
+- **Safety Play**: Partial payouts allowed, lower multipliers (2.5x to 90x)
+- **Player Props**: Football, Basketball, Tennis, Golf, Cricket
 
 ### User Management
-- User registration and authentication
-- Profile management
-- Betting history and statistics
-- Balance tracking
+- Registration with comprehensive validation (21+ age requirement)
+- JWT-based authentication
+- Starting balance of $1000 for demo accounts
 
-## 🚀 Deployment
-
-### Backend
-- Deploy to cloud platforms (Azure, AWS, Google Cloud)
-- Use Docker containers for consistent deployment
-- Configure PostgreSQL database connection
-
-### Frontend Web
-- Build: `npm run build`
-- Deploy to static hosting (Netlify, Vercel, AWS S3)
-
-### Mobile App
-- **iOS**: Submit to App Store via App Store Connect
-- **Android**: Publish to Google Play Store
-- **OTA Updates**: Use Expo's over-the-air update system
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
-## 📄 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/users/register` - User registration
-- `POST /api/users/login` - User login
+- `POST /api/users/login` - User authentication
 - `GET /api/users/{id}` - Get user profile
 
 ### Betting
-- `POST /api/bets` - Create new bet
-- `GET /api/bets/user/{userId}` - Get user's bets
+- `POST /api/bets` - Place new bet
+- `GET /api/bets/user/{userId}` - Get user betting history
 - `POST /api/bets/calculate-payout` - Calculate potential payout
 
 ### Games
 - `GET /api/games` - Get available games and player props
 
-## 🎨 Design System
+## Project Structure
 
-### Colors
-- **Primary**: Blue (#2563eb)
-- **Secondary**: Purple (#7c3aed)
-- **Success**: Green (#10b981)
-- **Warning**: Orange (#f59e0b)
-- **Error**: Red (#ef4444)
-- **Background**: Black (#000000)
-- **Surface**: Dark Gray (#1f2937)
+```
+playerbet/
+├── backend/PlayerBet.Api/     # .NET 8 Web API
+├── frontend/                  # React web application
+├── mobile/                    # React Native mobile app
+├── docker-compose.yml         # Docker configuration
+└── setup.sh                   # Setup script
+```
 
-### Typography
-- **Headings**: Bold, high contrast
-- **Body**: Medium weight, good readability
-- **Labels**: Small, muted colors
+## Development Commands
 
-## 📊 Future Enhancements
+### Backend
+```bash
+# Database
+dotnet ef migrations add MigrationName
+dotnet ef database update
 
-- [ ] Push notifications for bet results
-- [ ] Social features (friend betting, leaderboards)
-- [ ] Advanced analytics and insights
-- [ ] Live streaming integration
-- [ ] Cryptocurrency payments
-- [ ] Multi-language support
-- [ ] Biometric authentication (mobile)
+# Development
+dotnet restore
+dotnet build
+dotnet run
+```
 
-## 📞 Support
+### Frontend
+```bash
+npm install
+npm start           # Development server
+npm run build       # Production build
+```
 
-For questions and support:
-- Create an issue in this repository
-- Check the documentation in each project folder
-- Review the API documentation
+### Mobile
+```bash
+npm install
+npm start           # Expo development server
+expo build:android  # Android build
+expo build:ios      # iOS build
+```
 
-## 📜 License
+## Docker Deployment
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```bash
+# Full stack
+docker-compose up -d
+
+# Database only
+docker-compose up postgres -d
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Submit a pull request
+
+## Security Considerations
+
+- Input validation on all endpoints
+- JWT tokens for authentication
+- Age verification (21+ requirement)
+- Rate limiting recommended for production
+
+## Known Issues/Limitations
+
+1. **Demo Authentication**: Simplified JWT implementation
+2. **Mock Data**: Sports data is hardcoded for demo
+3. **Production Security**: Password hashing needs enhancement for production
+
+## License
+
+This project is licensed under the MIT License.
 
 ---
 
-Built with ❤️ using React, React Native, and .NET Core
+For detailed setup instructions, see individual README files in each directory.

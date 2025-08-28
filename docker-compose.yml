@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: playerbet
+      POSTGRES_DB: PlayerBetDb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password123
     ports:
@@ -12,25 +12,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  backend:
-    build:
+  playerbet-api:
+    build: 
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "7000:80"
+      - "5001:80"
     depends_on:
       - postgres
     environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=playerbet;Username=postgres;Password=password123
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=PlayerBetDb;Username=postgres;Password=password123;Port=5432
 
 volumes:
   postgres_data:
