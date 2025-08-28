@@ -16,7 +16,7 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
   }, [currentScreen]);
 
   const nextScreen = () => {
-    if (currentScreen < 2) {
+    if (currentScreen < 1) {
       setIsAnimating(true);
       setTimeout(() => {
         setCurrentScreen(prev => prev + 1);
@@ -75,7 +75,40 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
               transform: 'rotate(-12deg)'
             }}>
               <Trophy size={32} color="#1e40af" />
-            </div>
+              {/* Floating elements - positioned to stay within screen bounds */}
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            width: '48px',
+            height: '48px',
+            backgroundColor: 'rgba(37, 99, 235, 0.2)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(4px)',
+            border: '1px solid rgba(96, 165, 250, 0.3)'
+          }}>
+            <TrendingUp size={20} color="#60a5fa" />
+          </div>
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '20px',
+            width: '40px',
+            height: '40px',
+            backgroundColor: 'rgba(251, 191, 36, 0.2)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(4px)',
+            border: '1px solid rgba(251, 191, 36, 0.3)'
+          }}>
+            <Star size={16} color="#fbbf24" />
+          </div>
+        </div>
           </div>
           <div style={{
             position: 'absolute',
@@ -141,7 +174,7 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
     </div>
   );
 
-  // Screen 2: App Preview
+  // Screen 2: App Preview with realistic dashboard mockup
   const SplashScreen2 = () => (
     <div style={{
       display: 'flex',
@@ -185,43 +218,88 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
         <div style={{ position: 'relative' }}>
           {/* Phone Frame */}
           <div style={{
-            width: '256px',
-            height: '384px',
+            width: '280px',
+            height: '500px',
             backgroundColor: '#111827',
             borderRadius: '24px',
             border: '4px solid #374151',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
             overflow: 'hidden'
           }}>
-            {/* Phone Screen Content */}
+            {/* Phone Screen Content - Realistic Dashboard */}
             <div style={{
               height: '100%',
-              background: 'linear-gradient(to bottom, #111827, #000)',
-              padding: '16px'
+              background: 'linear-gradient(to bottom, #000, #111827)',
+              display: 'flex',
+              flexDirection: 'column'
             }}>
-              {/* Mock App Header */}
+              {/* Mock App Header - Exactly like mobile dashboard */}
               <div style={{
+                background: 'linear-gradient(135deg, #7c3aed, #2563eb)',
+                padding: '12px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px',
-                paddingBottom: '8px',
-                borderBottom: '1px solid #374151'
+                justifyContent: 'space-between'
               }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Trophy size={12} color="white" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 'bold' }}>PLAYERBET</div>
+                    <div style={{ fontSize: '8px', opacity: 0.9 }}>Build Your Parlay</div>
+                  </div>
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Trophy size={16} color="#60a5fa" />
-                  <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>PlayerBet</span>
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '10px',
+                    fontWeight: 'bold'
+                  }}>
+                    A
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    gap: '4px',
+                    fontSize: '8px'
+                  }}>
+                    <div style={{ fontSize: '8px' }}>⏏</div>
+                    Logout
+                  </div>
                 </div>
               </div>
               
               {/* Navigation Tabs */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ 
+                display: 'flex', 
+                gap: '6px', 
+                padding: '12px',
+                borderBottom: '1px solid #374151'
+              }}>
                 <div style={{
                   flex: 1,
                   backgroundColor: '#2563eb',
                   textAlign: 'center',
-                  padding: '8px',
-                  borderRadius: '8px',
+                  padding: '6px',
+                  borderRadius: '6px',
                   fontSize: '10px',
                   fontWeight: '500'
                 }}>Football</div>
@@ -229,26 +307,18 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
                   flex: 1,
                   backgroundColor: '#1f2937',
                   textAlign: 'center',
-                  padding: '8px',
-                  borderRadius: '8px',
+                  padding: '6px',
+                  borderRadius: '6px',
                   fontSize: '10px'
                 }}>Basketball</div>
                 <div style={{
                   flex: 1,
                   backgroundColor: '#1f2937',
                   textAlign: 'center',
-                  padding: '8px',
-                  borderRadius: '8px',
+                  padding: '6px',
+                  borderRadius: '6px',
                   fontSize: '10px'
                 }}>Tennis</div>
-                <div style={{
-                  flex: 1,
-                  backgroundColor: '#1f2937',
-                  textAlign: 'center',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  fontSize: '10px'
-                }}>Golf</div>
               </div>
               
               {/* Search Bar */}
@@ -256,99 +326,291 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
                 backgroundColor: '#1f2937',
                 borderRadius: '8px',
                 padding: '8px',
-                marginBottom: '16px',
+                margin: '12px',
                 fontSize: '10px',
-                color: '#9ca3af'
+                color: '#9ca3af',
+                border: '1px solid #374151'
               }}>
                 🔍 Search for players, teams...
               </div>
               
-              {/* Mock Game Cards */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Mock Player Prop Cards */}
+              <div style={{ 
+                padding: '0 12px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '12px',
+                flex: 1,
+                overflowY: 'auto'
+              }}>
+                {/* Player Prop Card 1 */}
                 <div style={{
-                  backgroundColor: '#1f2937',
-                  borderRadius: '8px',
-                  padding: '12px'
+                  background: 'linear-gradient(145deg, #374151, #1f2937)',
+                  borderRadius: '12px',
+                  border: '1px solid #4b5563',
+                  overflow: 'hidden'
                 }}>
+                  {/* Match Header */}
                   <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '8px',
-                    fontSize: '10px'
+                    background: 'linear-gradient(90deg, #0f172a, #1e293b)',
+                    padding: '8px',
+                    borderBottom: '1px solid #475569'
                   }}>
-                    <div style={{ color: '#9ca3af' }}>Today 8:00 PM</div>
-                    <div style={{ color: '#10b981' }}>LIVE</div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '8px',
+                      color: '#cbd5e1'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{
+                          width: '4px',
+                          height: '4px',
+                          backgroundColor: '#10b981',
+                          borderRadius: '50%'
+                        }}></div>
+                        Man City vs Liverpool
+                      </div>
+                      <div style={{
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        padding: '2px 4px',
+                        borderRadius: '4px',
+                        fontSize: '8px',
+                        color: '#60a5fa'
+                      }}>
+                        Today 8:00 PM
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
-                    <span>Team A</span>
-                    <span style={{ color: '#60a5fa' }}>2.1</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
-                    <span>Team B</span>
-                    <span style={{ color: '#60a5fa' }}>1.8</span>
+
+                  {/* Player Info with exact mobile structure */}
+                  <div style={{ padding: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        background: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        color: 'white'
+                      }}>
+                        EH
+                      </div>
+                      <div>
+                        <div>
+                          <div style={{ fontSize: '10px', fontWeight: 'bold', color: 'white', lineHeight: '12px' }}>
+                            Erling
+                          </div>
+                          <div style={{ fontSize: '10px', fontWeight: 'bold', color: 'white', lineHeight: '12px' }}>
+                            Haaland
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '8px', color: '#94a3b8' }}>
+                          Man City
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Detailed Stat Section */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+                      borderRadius: '6px',
+                      padding: '8px',
+                      marginBottom: '8px',
+                      border: '1px solid #334155'
+                    }}>
+                      <div style={{ fontSize: '8px', color: '#94a3b8', marginBottom: '4px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        GOALS
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '6px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+                          <div style={{ fontSize: '16px', fontWeight: '900', color: 'white' }}>1.5</div>
+                          <div style={{ fontSize: '8px', color: '#60a5fa', fontWeight: '600' }}>LINE</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '7px', color: '#64748b', marginBottom: '1px' }}>L5 Average</div>
+                          <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#10b981' }}>
+                            1.6
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Recent Form */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '7px', color: '#64748b', fontWeight: '600' }}>L5:</span>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                          {[2, 1, 3, 0, 2].map((value, index) => (
+                            <div
+                              key={index}
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                backgroundColor: value > 1.5 ? '#059669' : '#dc2626',
+                                borderRadius: '3px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '6px',
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              {value}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Betting Options with Selected State */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div style={{
+                        padding: '8px',
+                        background: 'linear-gradient(135deg, #4b5563, #374151)',
+                        border: '1px solid #6b7280',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        fontSize: '8px',
+                        fontWeight: '600',
+                        color: 'white',
+                        minHeight: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        OVER
+                      </div>
+                      <div style={{
+                        padding: '8px',
+                        background: 'linear-gradient(135deg, #059669, #10b981)',
+                        border: '2px solid #10b981',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        fontSize: '8px',
+                        fontWeight: '700',
+                        color: 'white',
+                        minHeight: '32px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '2px'
+                      }}>
+                        <div>UNDER</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            backgroundColor: 'white',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <div style={{ fontSize: '6px', color: '#059669' }}>✓</div>
+                          </div>
+                          <span style={{ fontSize: '6px' }}>Selected</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Player Prop Card 2 - Smaller */}
                 <div style={{
-                  backgroundColor: '#1f2937',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  opacity: 0.75
+                  background: 'linear-gradient(145deg, #374151, #1f2937)',
+                  borderRadius: '12px',
+                  border: '1px solid #4b5563',
+                  opacity: 0.8
                 }}>
                   <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '8px',
-                    fontSize: '10px'
+                    background: 'linear-gradient(90deg, #0f172a, #1e293b)',
+                    padding: '6px',
+                    borderBottom: '1px solid #475569'
                   }}>
-                    <div style={{ color: '#9ca3af' }}>Tomorrow 3:00 PM</div>
+                    <div style={{ fontSize: '7px', color: '#cbd5e1' }}>
+                      Arsenal vs Chelsea • Tomorrow 3:00 PM
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
-                    <span>Team C</span>
-                    <span style={{ color: '#60a5fa' }}>1.9</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
-                    <span>Team D</span>
-                    <span style={{ color: '#60a5fa' }}>2.0</span>
+                  <div style={{ padding: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        background: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+                        borderRadius: '50%',
+                        fontSize: '8px',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        BS
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '9px', fontWeight: 'bold', color: 'white' }}>
+                          Bukayo Saka
+                        </div>
+                        <div style={{ fontSize: '7px', color: '#94a3b8' }}>
+                          Shots on Target 2.5
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                      <div style={{
+                        padding: '6px',
+                        backgroundColor: '#4b5563',
+                        borderRadius: '4px',
+                        textAlign: 'center',
+                        fontSize: '7px',
+                        color: 'white'
+                      }}>
+                        OVER
+                      </div>
+                      <div style={{
+                        padding: '6px',
+                        backgroundColor: '#4b5563',
+                        borderRadius: '4px',
+                        textAlign: 'center',
+                        fontSize: '7px',
+                        color: 'white'
+                      }}>
+                        UNDER
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Bottom Nav */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                padding: '8px',
+                backgroundColor: '#111827',
+                borderTop: '1px solid #374151'
+              }}>
+                {['🏠', '⚽', '🏆', '👤'].map((icon, i) => (
+                  <div key={i} style={{
+                    padding: '4px',
+                    fontSize: '12px',
+                    color: i === 0 ? '#2563eb' : '#9ca3af'
+                  }}>
+                    {icon}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          
-          {/* Floating elements */}
-          <div style={{
-            position: 'absolute',
-            top: '-32px',
-            right: '-32px',
-            width: '64px',
-            height: '64px',
-            backgroundColor: 'rgba(37, 99, 235, 0.2)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backdropFilter: 'blur(4px)',
-            border: '1px solid rgba(96, 165, 250, 0.3)'
-          }}>
-            <TrendingUp size={24} color="#60a5fa" />
-          </div>
-          <div style={{
-            position: 'absolute',
-            bottom: '-24px',
-            left: '-24px',
-            width: '48px',
-            height: '48px',
-            backgroundColor: 'rgba(251, 191, 36, 0.2)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backdropFilter: 'blur(4px)',
-            border: '1px solid rgba(251, 191, 36, 0.3)'
-          }}>
-            <Star size={16} color="#fbbf24" />
           </div>
         </div>
       </div>
@@ -429,97 +691,11 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
       }}>
         <div style={{ width: '8px', height: '8px', backgroundColor: '#4b5563', borderRadius: '50%' }}></div>
         <div style={{ width: '32px', height: '8px', backgroundColor: '#10b981', borderRadius: '4px' }}></div>
-        <div style={{ width: '8px', height: '8px', backgroundColor: '#4b5563', borderRadius: '50%' }}></div>
       </div>
     </div>
   );
 
-  // Screen 3: Final CTA (simplified for now)
-  const SplashScreen3 = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100vh',
-      backgroundColor: '#000',
-      color: 'white',
-      padding: '32px'
-    }}>
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        textAlign: 'center'
-      }}>
-        <h2 style={{
-          fontSize: '48px',
-          fontWeight: 'bold',
-          marginBottom: '16px',
-          lineHeight: '1.1'
-        }}>
-          Predict, play and<br />
-          <span style={{ color: '#60a5fa' }}>win big</span>
-        </h2>
-        <p style={{
-          color: '#9ca3af',
-          fontSize: '18px',
-          marginBottom: '48px'
-        }}>
-          Get ready to place your bets
-        </p>
-
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: '16px', width: '100%', maxWidth: '400px' }}>
-          <button
-            onClick={handleLogin}
-            style={{
-              flex: 1,
-              backgroundColor: '#7c3aed',
-              color: 'white',
-              fontWeight: '600',
-              padding: '16px',
-              borderRadius: '12px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            Login
-          </button>
-          <button
-            onClick={handleSignUp}
-            style={{
-              flex: 1,
-              backgroundColor: '#2563eb',
-              color: 'white',
-              fontWeight: '600',
-              padding: '16px',
-              borderRadius: '12px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            Sign Up
-          </button>
-        </div>
-      </div>
-
-      {/* Page Indicator */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '8px'
-      }}>
-        <div style={{ width: '8px', height: '8px', backgroundColor: '#4b5563', borderRadius: '50%' }}></div>
-        <div style={{ width: '8px', height: '8px', backgroundColor: '#4b5563', borderRadius: '50%' }}></div>
-        <div style={{ width: '32px', height: '8px', backgroundColor: '#10b981', borderRadius: '4px' }}></div>
-      </div>
-    </div>
-  );
-
-  const screens = [SplashScreen1, SplashScreen2, SplashScreen3];
+  const screens = [SplashScreen1, SplashScreen2];
   const CurrentScreenComponent = screens[currentScreen];
 
   return (
@@ -528,48 +704,6 @@ const OnboardingFlow = ({ onLogin, onSignUp }) => {
       opacity: isAnimating ? 0 : 1
     }}>
       <CurrentScreenComponent />
-      
-      {/* Development Navigation */}
-      {currentScreen > 0 && (
-        <div style={{
-          position: 'fixed',
-          bottom: '16px',
-          left: '16px',
-          display: 'flex',
-          gap: '8px'
-        }}>
-          <button
-            onClick={() => setCurrentScreen(Math.max(0, currentScreen - 1))}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(4px)',
-              color: 'white',
-              padding: '4px 12px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            Previous
-          </button>
-          <button
-            onClick={nextScreen}
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(4px)',
-              color: 'white',
-              padding: '4px 12px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            Next
-          </button>
-        </div>
-      )}
 
       <style>{`
         @keyframes pulse {

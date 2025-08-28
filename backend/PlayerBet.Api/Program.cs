@@ -15,7 +15,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://10.0.0.247:5001")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -45,7 +45,7 @@ if (app.Environment.IsDevelopment())
 // Add error handling middleware
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
 app.UseAuthorization();
 app.MapControllers();
@@ -66,4 +66,4 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-app.Run();
+app.Run("http://0.0.0.0:5001");

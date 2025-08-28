@@ -13,7 +13,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUser } from '../context/UserContext';
+import { API_CONFIG } from '../utils/Constants';
 
 const SimpleInput = ({ label, type = 'default', value, onChange, placeholder, error }) => (
   <View style={{ marginBottom: 20 }}>
@@ -32,11 +34,49 @@ const SimpleInput = ({ label, type = 'default', value, onChange, placeholder, er
   </View>
 );
 
+// Date validation function - much simpler now!
+const validateDateOfBirth = (date) => {
+  if (!date) return 'Date of birth is required';
+  
+  // Check if user is at least 21 years old
+  const today = new Date();
+  const age = today.getFullYear() - date.getFullYear();
+  const monthDiff = today.getMonth() - date.getMonth();
+  const dayDiff = today.getDate() - date.getDate();
+  
+  let actualAge = age;
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    actualAge--;
+  }
+  
+  if (actualAge < 21) return 'You must be 21 or older to register';
+  
+  // Check if date is not in the future
+  if (date > today) return 'Date of birth cannot be in the future';
+  
+  // Check if date is reasonable (not too far in the past)
+  if (today.getFullYear() - date.getFullYear() > 120) {
+    return 'Please enter a valid date of birth';
+  }
+  
+  return null;
+};
+
+// Format date for display
+const formatDate = (date) => {
+  if (!date) return '';
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
 const SignUpScreen = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
-  const { handleLogin } = useUser();
+  const {handleSignup } = useUser();
 
   // Form state
   const [firstName, setFirstName] = useState('');
@@ -44,13 +84,16 @@ const SignUpScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [email, setEmail] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState(null);
   const [address, setAddress] = useState('');
   const [state, setState] = useState('');
   const [country, setCountry] = useState('Nigeria');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
+
+  // Date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -60,20 +103,26 @@ const SignUpScreen = ({ navigation }) => {
     
     switch (step) {
       case 0:
-        if (!firstName) newErrors.firstName = 'First name is required';
-        if (!lastName) newErrors.lastName = 'Last name is required';
-        if (!phoneNumber) newErrors.phoneNumber = 'Phone number is required';
+        if (!firstName.trim()) newErrors.firstName = 'First name is required';
+        if (!lastName.trim()) newErrors.lastName = 'Last name is required';
+        if (!phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
         break;
       case 1:
-        if (!email) newErrors.email = 'Email is required';
-        if (!dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
-        if (!address) newErrors.address = 'Address is required';
-        if (!state) newErrors.state = 'State is required';
+        if (!email.trim()) newErrors.email = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          newErrors.email = 'Please enter a valid email address';
+        }
+        
+        const dobError = validateDateOfBirth(dateOfBirth);
+        if (dobError) newErrors.dateOfBirth = dobError;
+        
+        if (!address.trim()) newErrors.address = 'Address is required';
+        if (!state.trim()) newErrors.state = 'State is required';
         break;
       case 4:
-        if (!username) newErrors.username = 'Username is required';
+        if (!username.trim()) newErrors.username = 'Username is required';
         if (!password) newErrors.password = 'Password is required';
-        if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+        else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
         break;
     }
     
@@ -93,6 +142,7 @@ const SignUpScreen = ({ navigation }) => {
 
   const prevStep = () => {
     setCurrentStep(prev => prev - 1);
+    setErrors({}); // Clear errors when going back
   };
 
   const startLoadingSequence = () => {
@@ -127,29 +177,87 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
+  // Handle date picker change
+  const onDateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (selectedDate) {
+      setDateOfBirth(selectedDate);
+      // Clear any existing date error
+      if (errors.dateOfBirth) {
+        setErrors(prev => ({ ...prev, dateOfBirth: null }));
+      }
+    }
+  };
+
   const completeSignUp = async () => {
-    const userData = {
-      firstName,
-      lastName,
-      phoneNumber,
-      referralCode,
-      email,
-      dateOfBirth,
-      address,
-      state,
-      country,
-      username,
-      password,
-      name: firstName + ' ' + lastName,
-      id: Math.floor(Math.random() * 1000), // Mock ID
-      balance: 1000
-    };
-    
-    // Mock token
-    const token = 'mock_token_' + Date.now();
-    
-    await handleLogin(userData, token);
-    navigation.navigate('Dashboard');
+    try {      
+      
+      if (!dateOfBirth) {
+        Alert.alert('Error', 'Please select your date of birth.');
+        return;
+      }
+
+      const userData = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        referralCode: referralCode.trim() || undefined,
+        email: email.trim().toLowerCase(),
+        dateOfBirth: dateOfBirth.toISOString(), // Already a proper Date object
+        address: address.trim(),
+        state: state.trim(),
+        country: country.trim(),
+        username: username.trim(),
+        password,
+        name: `${firstName.trim()} ${lastName.trim()}`,
+        id: Math.floor(Math.random() * 1000), // Mock ID
+        balance: 1000
+      };
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/users/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      console.log(`📊 Login API response status: ${response.status}`);
+
+      const result = await response.json();
+      console.log(`📋 Login API result:`, result);
+
+      if (response.ok && result.user && result.user.id) {
+        const userWithId = {
+          id: result.user.id,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          email: result.user.email,
+          username: result.user.username,
+          balance: result.user.balance,
+          name: result.user.name || `${result.user.firstName} ${result.user.lastName}`
+        };
+        
+        console.log(`✅ Login successful for user ID: ${userWithId.id}`);
+        
+        // Use the context's handleLogin which stores data in AsyncStorage
+        await handleSignup(userWithId);
+        
+        setIsLoading(false);
+        navigation.navigate('Dashboard');
+      } else {
+        setIsLoading(false);
+        setErrorMessage(result.message || "Sorry we couldn't find your details. Please double-check or Reset Password");
+        setShowError(true);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      setErrorMessage('Network error. Please check your connection and try again.');
+      setShowError(true);
+    }
   };
 
   const Header = ({ title, showBack = true }) => (
@@ -250,7 +358,7 @@ const SignUpScreen = ({ navigation }) => {
     );
   }
 
-  // Step 1: Basic Information
+  // Step 1: Basic Information with Date Picker
   if (currentStep === 1) {
     return (
       <SafeAreaView style={styles.container}>
@@ -275,13 +383,52 @@ const SignUpScreen = ({ navigation }) => {
               error={errors.email}
             />
 
-            <SimpleInput
-              label="Date of Birth"
-              value={dateOfBirth}
-              onChange={setDateOfBirth}
-              placeholder="YYYY-MM-DD"
-              error={errors.dateOfBirth}
-            />
+            {/* Date Picker Section */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={styles.label}>Date of Birth</Text>
+              
+              <TouchableOpacity 
+                style={[styles.datePickerButton, errors.dateOfBirth && styles.inputError]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <View style={styles.datePickerContent}>
+                  <Ionicons name="calendar-outline" size={20} color="#9ca3af" />
+                  <Text style={[styles.datePickerText, dateOfBirth && styles.datePickerTextSelected]}>
+                    {dateOfBirth ? formatDate(dateOfBirth) : 'Select your date of birth'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-down" size={20} color="#9ca3af" />
+              </TouchableOpacity>
+              
+              {errors.dateOfBirth && <Text style={styles.errorText}>{errors.dateOfBirth}</Text>}
+            </View>
+
+            {/* Date Picker Modal */}
+            {showDatePicker && (
+              <DateTimePicker
+                value={dateOfBirth || new Date(2000, 0, 1)} // Default to Jan 1, 2000
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onDateChange}
+                maximumDate={new Date()} // Can't select future dates
+                minimumDate={new Date(1900, 0, 1)} // Reasonable minimum date
+                textColor="white"
+                accentColor="#2563eb"
+                themeVariant="dark"
+              />
+            )}
+            
+            {/* iOS Date Picker Done Button */}
+            {showDatePicker && Platform.OS === 'ios' && (
+              <View style={styles.datePickerActions}>
+                <TouchableOpacity 
+                  style={styles.datePickerDoneButton}
+                  onPress={() => setShowDatePicker(false)}
+                >
+                  <Text style={styles.datePickerDoneText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View style={styles.warningBox}>
               <Text style={styles.warningText}>You must be 21 or older to play</Text>
@@ -547,6 +694,47 @@ const styles = {
   inputError: { borderColor: '#ef4444' },
   errorText: { color: '#ef4444', fontSize: 12, marginTop: 4 },
   disclaimer: { fontSize: 12, color: '#9ca3af', lineHeight: 16, marginBottom: 24 },
+  
+  // Date Picker
+  datePickerButton: {
+    backgroundColor: '#374151',
+    borderWidth: 1,
+    borderColor: '#4b5563',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  datePickerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  datePickerText: {
+    color: '#9ca3af',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  datePickerTextSelected: {
+    color: 'white',
+  },
+  datePickerActions: {
+    alignItems: 'flex-end',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  datePickerDoneButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  datePickerDoneText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   
   // Password
   passwordContainer: { position: 'relative' },

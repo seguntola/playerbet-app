@@ -15,6 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
+import { API_CONFIG } from '../utils/Constants';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -34,32 +35,56 @@ const LoginScreen = ({ navigation }) => {
 
     setIsLoading(true);
     
-    // Simulate API call with animation
-    setTimeout(async () => {
-      // Mock successful login for demo purposes
-      // In real app, this would be an actual API call
-      try {
-        const userData = {
-          id: Math.floor(Math.random() * 1000),
-          firstName: 'Demo',
-          lastName: 'User',
-          email: email,
-          username: email.split('@')[0],
-          balance: 1000,
-          name: 'Demo User'
+    try {
+      console.log(`🔍 Starting login attempt for: ${email}`);
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password
+        }),
+      });
+
+      console.log(`📊 Login API response status: ${response.status}`);
+
+      const result = await response.json();
+      console.log(`📋 Login API result:`, result);
+
+      if (response.ok && result.user && result.user.id) {
+        const userWithId = {
+          id: result.user.id,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          email: result.user.email,
+          username: result.user.username,
+          balance: result.user.balance,
+          name: result.user.name || `${result.user.firstName} ${result.user.lastName}`
         };
         
-        const token = 'mock_token_' + Date.now();
+        console.log(`✅ Login successful for user ID: ${userWithId.id}`);
         
-        await handleLogin(userData, token);
+        // Use the context's handleLogin which stores data in AsyncStorage
+        await handleLogin(userWithId, result.token);
+        
         setIsLoading(false);
         navigation.navigate('Dashboard');
-      } catch (error) {
+        
+      } else {
         setIsLoading(false);
-        setErrorMessage("Sorry we couldn't find your details. Please double-check or Reset Password");
+        console.log(`❌ Login failed: ${result.message}`);
+        setErrorMessage(result.message || "Sorry we couldn't find your details. Please double-check or Reset Password");
         setShowError(true);
       }
-    }, 2000);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('🚨 Login error:', error);
+      setErrorMessage('Network error. Please check your connection and try again.');
+      setShowError(true);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -220,15 +245,6 @@ const LoginScreen = ({ navigation }) => {
               <Text style={styles.loginButtonText}>LOGIN</Text>
             </LinearGradient>
           </TouchableOpacity>
-
-          {/* Demo Credentials (matches web) */}
-          <View style={styles.demoCredentials}>
-            <Text style={styles.demoLabel}>Demo credentials:</Text>
-            <Text style={styles.demoText}>
-              Email: demo@playerbet.com{'\n'}
-              Password: password123
-            </Text>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -279,6 +295,7 @@ const styles = {
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 32,
+    paddingBottom: 40, // Added bottom padding to replace demo credentials space
   },
 
   // Loading Screen
@@ -471,25 +488,6 @@ const styles = {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-  },
-
-  // Demo Credentials
-  demoCredentials: {
-    backgroundColor: '#1f2937',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#374151',
-  },
-  demoLabel: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginBottom: 4,
-  },
-  demoText: {
-    fontSize: 12,
-    color: '#e5e7eb',
-    lineHeight: 16,
   },
 
   // Error Modal

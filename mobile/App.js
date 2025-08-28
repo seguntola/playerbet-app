@@ -62,6 +62,15 @@ export default function App() {
     }
   };
 
+    const handleSignup = async (userData) => {
+    try {
+      await AsyncStorage.setItem('playerbet_user', JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      console.error('Error saving user data:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.multiRemove(['playerbet_token', 'playerbet_user']);
@@ -81,7 +90,7 @@ export default function App() {
   }
 
   return (
-    <UserContext.Provider value={{ user, setUser, handleLogin, handleLogout }}>
+    <UserContext.Provider value={{ user, setUser, handleLogin, handleSignup, handleLogout }}>
       <NavigationContainer>
         <StatusBar style="light" backgroundColor="#000" />
         <Stack.Navigator

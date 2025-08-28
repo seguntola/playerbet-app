@@ -101,13 +101,16 @@ const DashboardScreen = ({ navigation }) => {
     
     if (existingBetIndex !== -1) {
       if (bettingSlip[existingBetIndex].selection === selection) {
+        // Remove if selecting same option again
         setBettingSlip(bettingSlip.filter(bet => bet.propId !== prop.id));
       } else {
+        // Update selection if changing option
         const updatedSlip = [...bettingSlip];
         updatedSlip[existingBetIndex].selection = selection;
         setBettingSlip(updatedSlip);
       }
     } else {
+      // Add new bet to slip
       const newBet = {
         propId: prop.id,
         player: prop.player,
@@ -118,9 +121,8 @@ const DashboardScreen = ({ navigation }) => {
       };
       setBettingSlip([...bettingSlip, newBet]);
       
-      if (bettingSlip.length >= 1) {
-        setShowBettingSlip(true);
-      }
+      // 🔥 REMOVED: No longer automatically showing betting slip
+      // Users must click the FAB to view their betting slip
     }
   };
 
@@ -152,6 +154,20 @@ const DashboardScreen = ({ navigation }) => {
   const handleLogoutSubmit = async () => {
     await handleLogout();
     navigation.navigate('Onboarding');
+  };
+
+  // Enhanced FAB click handler with visual feedback
+  const handleFABPress = () => {
+    if (bettingSlip.length === 0) {
+      // Show helpful message if no picks
+      Alert.alert(
+        'No picks selected',
+        'Select some player props to start building your parlay!',
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+    setShowBettingSlip(true);
   };
 
   const PlayerPropCard = ({ prop }) => {
@@ -324,8 +340,6 @@ const DashboardScreen = ({ navigation }) => {
         </View>
       </LinearGradient>
 
-
-
       <ScrollView style={styles.content}>
         {/* Sports Navigation */}
         <ScrollView 
@@ -400,17 +414,32 @@ const DashboardScreen = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Betting Slip FAB */}
+      {/* Enhanced Betting Slip FAB - Always shows when picks exist */}
       {bettingSlip.length > 0 && (
         <TouchableOpacity
           style={[
             styles.fab,
-            { backgroundColor: bettingSlip.length >= 2 ? '#2563eb' : '#6b7280' }
+            { 
+              backgroundColor: bettingSlip.length >= 2 ? '#2563eb' : '#6b7280',
+              // Add a subtle pulse animation for 2+ picks
+              ...(bettingSlip.length >= 2 && {
+                shadowColor: '#2563eb',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.5,
+                shadowRadius: 10,
+              })
+            }
           ]}
-          onPress={() => setShowBettingSlip(true)}
+          onPress={handleFABPress}
+          activeOpacity={0.8}
         >
           <Text style={styles.fabNumber}>{bettingSlip.length}</Text>
           <Text style={styles.fabText}>PICKS</Text>
+          {bettingSlip.length >= 2 && (
+            <View style={styles.fabBadge}>
+              <Text style={styles.fabBadgeText}>Ready!</Text>
+            </View>
+          )}
         </TouchableOpacity>
       )}
 
@@ -745,10 +774,40 @@ const styles = {
   comingSoonTitle: { fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 8 },
   comingSoonText: { color: '#9ca3af', fontSize: 14, textAlign: 'center' },
   
-  // FAB
-  fab: { position: 'absolute', bottom: 70, right: 20, width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 12 },
+  // Enhanced FAB
+  fab: { 
+    position: 'absolute', 
+    bottom: 70, 
+    right: 20, 
+    width: 60, 
+    height: 60, 
+    borderRadius: 30, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.3, 
+    shadowRadius: 12, 
+    elevation: 12,
+    overflow: 'visible' // Allow badge to show outside FAB
+  },
   fabNumber: { fontSize: 20, fontWeight: 'bold', color: 'white' },
   fabText: { fontSize: 10, color: 'white' },
+  fabBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#10b981',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  fabBadgeText: {
+    fontSize: 8,
+    color: 'white',
+    fontWeight: 'bold',
+  },
   
   // Modal
   modal: { flex: 1, backgroundColor: '#111827' },

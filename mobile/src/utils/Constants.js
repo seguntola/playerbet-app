@@ -1,8 +1,25 @@
+import { Platform } from 'react-native';
+
+const getApiUrl = () => {
+  if (__DEV__) {
+    // Development environment
+    if (Platform.OS === 'android') {
+      // Android emulator
+      return 'http://10.0.2.2:5001/api';
+    } else {
+      // iOS simulator - replace with your computer's IP address
+      // To find your IP: run `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+      return 'http://10.0.0.247:5001/api'; // Replace 192.168.1.100 with your actual IP
+    }
+  } else {
+    // Production environment
+    return 'https://your-production-api.com/api';
+  }
+};
+
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: __DEV__ 
-    ? 'http://localhost:5000/api'  // Android emulator
-    : 'https://your-production-api.com/api',  // Production URL
+  BASE_URL: getApiUrl(),  // Production URL
   TIMEOUT: 10000,
 };
 

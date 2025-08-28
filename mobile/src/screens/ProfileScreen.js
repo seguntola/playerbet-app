@@ -173,7 +173,7 @@ const ProfileScreen = ({ navigation }) => {
             {/* Balance Display */}
             <View style={styles.balanceSection}>
               <Text style={styles.balanceLabel}>Current Balance</Text>
-              <Text style={styles.balanceAmount}>${user?.balance || '1,000'}</Text>
+              <Text style={styles.balanceAmount}>₦{user?.balance || '1,000'}</Text>
               <View style={styles.balanceActions}>
                 <TouchableOpacity style={styles.balanceButton}>
                   <Ionicons name="add" size={16} color="#10b981" />
@@ -196,13 +196,13 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.keyStats}>
             <StatCard label="Win Rate" value={`${userStats.winRate}%`} color="#10b981" icon="trending-up" />
             <StatCard label="Total Bets" value={userStats.totalBets} color="white" icon="trophy-outline" />
-            <StatCard label="Net Profit" value={`$${userStats.netProfit}`} color="#10b981" icon="cash-outline" />
+            <StatCard label="Net Profit" value={`₦${userStats.netProfit}`} color="#10b981" icon="cash-outline" />
           </View>
           
           {/* Detailed Stats Grid */}
           <View style={styles.statsGrid}>
-            <StatCard label="Total Wagered" value={`$${userStats.totalWagered}`} color="white" />
-            <StatCard label="Biggest Win" value={`$${userStats.biggestWin}`} color="#fbbf24" />
+            <StatCard label="Total Wagered" value={`₦${userStats.totalWagered}`} color="white" />
+            <StatCard label="Biggest Win" value={`₦${userStats.biggestWin}`} color="#fbbf24" />
             <StatCard label="Current Streak" value={`${userStats.currentStreak}W`} color="#10b981" />
             <StatCard label="Favorite Sport" value={userStats.favoriteSport} color="#60a5fa" />
           </View>

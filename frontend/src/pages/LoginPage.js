@@ -352,21 +352,6 @@ const LoginFlow = ({ onLogin, onSignUp, onBack }) => {
         >
           LOGIN
         </button>
-
-        {/* Demo Credentials */}
-        <div style={{
-          marginTop: '20px',
-          padding: '12px',
-          backgroundColor: '#1f2937',
-          borderRadius: '8px',
-          border: '1px solid #374151'
-        }}>
-          <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0 0 4px 0' }}>Demo credentials:</p>
-          <p style={{ fontSize: '12px', color: '#e5e7eb', margin: '0' }}>
-            Email: demo@playerbet.com<br />
-            Password: password123
-          </p>
-        </div>
       </div>
 
       {/* Error Modal */}
