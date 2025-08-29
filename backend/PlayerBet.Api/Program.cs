@@ -24,6 +24,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+builder.Services.Configure<TheOddsApiConfiguration>(builder.Configuration.GetSection(TheOddsApiConfiguration.SectionName));
+
 // Add Entity Framework
 builder.Services.AddDbContext<PlayerBetDbContext>(options =>
 {
@@ -36,16 +39,17 @@ builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IBettingService, BettingService>();
 builder.Services.AddScoped<IDataSyncService, DataSyncService>();
 builder.Services.AddScoped<ICacheService, MemoryCacheService>();
-builder.Services.AddScoped<TheOddsApiConfiguration>();
 
+builder.Services.AddMemoryCache();
+
+// And update the HttpClient registration to:
 builder.Services.AddHttpClient<ISportsDataService, SportsDataService>((sp, client) =>
 {
-    var cfg = sp.GetRequiredService<IOptions<TheOddsApiConfiguration>>().Value;
+    var cfg = sp.GetRequiredService<IOptionsMonitor<TheOddsApiConfiguration>>().CurrentValue;
     client.BaseAddress = new Uri(cfg.BaseUrl);
     client.Timeout = TimeSpan.FromSeconds(cfg.TimeoutSeconds);
-    client.DefaultRequestHeaders.Add("Accept", "application/json"); // optional
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
-
 
 var app = builder.Build();
 

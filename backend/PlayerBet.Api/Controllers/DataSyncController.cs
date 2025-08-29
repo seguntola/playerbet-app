@@ -7,7 +7,7 @@ namespace PlayerBet.Api.Controllers
     /// Admin controller for managing data sync
     /// </summary>
     [ApiController]
-    [Route("api/admin/[controller]")]
+    [Route("admin/[controller]")]
     public class DataSyncController : ControllerBase
     {
         private readonly IDataSyncService _dataSyncService;
