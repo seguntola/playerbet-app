@@ -5,7 +5,7 @@ using PlayerBet.Api.Models;
 
 namespace PlayerBet.Api.Controllers
 {
-[ApiController]
+    [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {

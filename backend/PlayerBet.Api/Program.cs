@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using PlayerBet.Api.Data;
 using PlayerBet.Api.Services;
 using PlayerBet.Api.Middleware;
+using PlayerBet.Api.Configuration;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +34,18 @@ builder.Services.AddDbContext<PlayerBetDbContext>(options =>
 // Register services
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IBettingService, BettingService>();
+builder.Services.AddScoped<IDataSyncService, DataSyncService>();
+builder.Services.AddScoped<ICacheService, MemoryCacheService>();
+builder.Services.AddScoped<TheOddsApiConfiguration>();
+
+builder.Services.AddHttpClient<ISportsDataService, SportsDataService>((sp, client) =>
+{
+    var cfg = sp.GetRequiredService<IOptions<TheOddsApiConfiguration>>().Value;
+    client.BaseAddress = new Uri(cfg.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(cfg.TimeoutSeconds);
+    client.DefaultRequestHeaders.Add("Accept", "application/json"); // optional
+});
+
 
 var app = builder.Build();
 
