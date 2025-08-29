@@ -1,159 +1,202 @@
-# PlayerBet - Modern Sports Betting Platform
+# PlayerBet Frontend
 
-PlayerBet is a comprehensive full-stack sports betting platform featuring web, mobile, and backend applications. The platform specializes in player prop betting with unique bet types including "Beast Mode" (high risk/reward) and "Safety Play" (forgiving payouts).
+Modern React web application for the PlayerBet sports betting platform.
 
-## Architecture
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+```
+
+## 🛠️ Technology Stack
+
+- **React 18** - Modern React with hooks and concurrent features
+- **Tailwind CSS 3.3.2** - Utility-first CSS framework
+- **Lucide React 0.263.1** - Beautiful SVG icons
+- **Axios 1.4.0** - Promise-based HTTP client
+- **React Router DOM 6.11.0** - Client-side routing
+
+## 📁 Project Structure
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Mobile App    │    │    Web App      │    │   Backend API   │
-│  (React Native)│    │    (React)      │    │   (.NET 8)      │
-│                 │    │                 │    │                 │
-│ • iOS/Android   │    │ • Modern React  │    │ • RESTful API   │
-│ • Expo Framework│────┼─• Tailwind CSS │────┤ • Entity Framework│
-│ • Native Performance│  │ • Responsive   │    │ • JWT Auth      │
-│                 │    │                 │    │ • PostgreSQL    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+src/
+├── pages/              # Main application pages
+│   ├── OnboardingFlow.js   # Multi-screen onboarding
+│   ├── LoginPage.js        # User login interface
+│   ├── SignUpPage.js       # User registration flow
+│   └── Dashboard.js        # Main betting interface
+├── components/         # Reusable UI components
+├── contexts/          # React context providers
+├── services/          # API service layer
+├── utils/            # Utility functions
+└── styles/           # CSS and styling files
 ```
 
-## Technology Stack
+## 🎯 Key Features
 
-### Backend (.NET 8)
-- **Framework**: ASP.NET Core 8.0 Web API
-- **Database**: PostgreSQL with Entity Framework Core 8.0
-- **Authentication**: JWT-based with simplified demo implementation
-- **Architecture**: Controller → Service → Repository pattern
-
-### Frontend (React)
-- **Framework**: React 18 with Create React App
-- **Styling**: Tailwind CSS 3.3.2
-- **Icons**: Lucide React 0.263.1
-- **HTTP Client**: Axios 1.4.0
-
-### Mobile (React Native)
-- **Framework**: React Native with Expo 53.0.22
-- **Navigation**: React Navigation 6.x
-- **Storage**: AsyncStorage for local data persistence
-
-## Quick Start
-
-### Prerequisites
-- Node.js 18+
-- .NET 8.0 SDK
-- PostgreSQL 14+
-- Docker (optional)
-- Expo CLI (for mobile)
-
-### Development Setup
-
-1. **Clone and setup:**
-   ```bash
-   git clone <your-repo-url>
-   cd playerbet
-   chmod +x setup.sh
-   ./setup.sh
-   ```
-
-2. **Backend:**
-   ```bash
-   cd backend/PlayerBet.Api
-   dotnet restore
-   dotnet ef database update
-   dotnet run
-   ```
-
-3. **Frontend:**
-   ```bash
-   cd frontend
-   npm install
-   npm start
-   ```
-
-4. **Mobile:**
-   ```bash
-   cd mobile
-   npm install
-   npm start
-   ```
-
-## Core Features
+### User Interface
+- **Onboarding Flow**: Interactive multi-screen introduction
+- **Authentication**: Login and registration with validation
+- **Betting Dashboard**: Real-time betting interface
+- **Responsive Design**: Mobile-first approach
 
 ### Betting System
-- **Beast Mode**: All picks must win, higher multipliers (3x to 150x)
-- **Safety Play**: Partial payouts allowed, lower multipliers (2.5x to 90x)
+- **Beast Mode**: High-risk, high-reward betting (up to 150x multiplier)
+- **Safety Play**: Forgiving payouts with partial wins
 - **Player Props**: Football, Basketball, Tennis, Golf, Cricket
+- **Real-time Calculations**: Live payout calculations
 
-### User Management
-- Registration with comprehensive validation (21+ age requirement)
-- JWT-based authentication
-- Starting balance of $1000 for demo accounts
+### User Experience
+- **Dark Theme**: Modern dark mode interface
+- **Animations**: Smooth transitions and interactions
+- **Real-time Updates**: Live betting slip updates
+- **Form Validation**: Comprehensive client-side validation
 
-## API Endpoints
+## 🔧 Configuration
 
-### Authentication
+### Environment Variables
+
+Create a `.env` file in the frontend directory:
+
+```env
+REACT_APP_API_URL=http://localhost:5001/api
+REACT_APP_WEBSOCKET_URL=ws://localhost:5001/hub
+```
+
+### API Configuration
+
+The app connects to the backend API running on `http://localhost:5000/api` by default. Update the `API_BASE_URL` in `src/App.js` if your backend runs on a different port.
+
+## 📱 Responsive Design
+
+The application is built mobile-first and works seamlessly across:
+- **Desktop**: Full-featured betting interface
+- **Tablet**: Optimized layout for touch interaction
+- **Mobile**: Complete mobile experience
+
+## 🎨 Styling
+
+### Tailwind CSS Configuration
+
+Custom configuration in `tailwind.config.js` includes:
+
+- **Custom Colors**: PlayerBet brand colors
+- **Extended Animations**: Bounce, pulse effects
+- **Custom Shadows**: Neon glow effects for buttons
+- **Responsive Breakpoints**: Mobile-first design
+
+### Design System
+
+```javascript
+// Brand Colors
+playerbet-blue: '#2563eb'
+playerbet-purple: '#7c3aed' 
+playerbet-green: '#10b981'
+playerbet-yellow: '#f59e0b'
+
+// Component Classes
+.neon-blue { box-shadow: 0 0 20px rgba(37, 99, 235, 0.5); }
+.neon-purple { box-shadow: 0 0 20px rgba(124, 58, 237, 0.5); }
+.neon-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+```
+
+## 🔌 API Integration
+
+The frontend communicates with the .NET backend API:
+
+### Authentication Endpoints
 - `POST /api/users/register` - User registration
 - `POST /api/users/login` - User authentication
-- `GET /api/users/{id}` - Get user profile
+- `POST /api/users/check-availability` - Validate email/username
 
-### Betting
+### Betting Endpoints
+- `GET /api/games` - Fetch available games and props
 - `POST /api/bets` - Place new bet
-- `GET /api/bets/user/{userId}` - Get user betting history
-- `POST /api/bets/calculate-payout` - Calculate potential payout
+- `GET /api/bets/user/{userId}` - Get user's betting history
+- `POST /api/bets/calculate-payout` - Calculate potential winnings
 
-### Games
-- `GET /api/games` - Get available games and player props
+## 🧪 Development
 
-## Project Structure
+### Available Scripts
 
-```
-playerbet/
-├── backend/PlayerBet.Api/     # .NET 8 Web API
-├── frontend/                  # React web application
-├── mobile/                    # React Native mobile app
-├── docker-compose.yml         # Docker configuration
-└── setup.sh                   # Setup script
-```
+- `npm start` - Start development server (port 3000)
+- `npm run build` - Create production build
+- `npm test` - Run test suite
+- `npm run eject` - Eject from Create React App (not recommended)
 
-## Development Commands
+### Development Tools
 
-### Backend
-```bash
-# Database
-dotnet ef migrations add MigrationName
-dotnet ef database update
+- **Hot Reload**: Automatic refresh on code changes
+- **Error Overlay**: Development error display
+- **Source Maps**: Debug with original source code
+- **ESLint**: Code linting and formatting
 
-# Development
-dotnet restore
-dotnet build
-dotnet run
-```
+### Debugging
 
-### Frontend
-```bash
-npm install
-npm start           # Development server
-npm run build       # Production build
-```
+The app includes a debug panel in development mode that shows:
+- Navigation state changes
+- API request/response logging
+- User authentication status
+- Error tracking
 
-### Mobile
-```bash
-npm install
-npm start           # Expo development server
-expo build:android  # Android build
-expo build:ios      # iOS build
-```
+## 🏗️ Build & Deployment
 
-## Docker Deployment
+### Production Build
 
 ```bash
-# Full stack
-docker-compose up -d
-
-# Database only
-docker-compose up postgres -d
+npm run build
 ```
 
-## Contributing
+Creates optimized production build in the `build/` folder with:
+- Minified JavaScript and CSS
+- Optimized images and assets
+- Service worker for caching
+- Source maps for debugging
+
+### Deployment Options
+
+- **Static Hosting**: Netlify, Vercel, AWS S3
+- **CDN**: Cloudflare, AWS CloudFront
+- **Docker**: Multi-stage build with nginx
+
+### Environment-Specific Builds
+
+- **Development**: Full debugging, hot reload
+- **Staging**: Production build with staging API
+- **Production**: Optimized build with production API
+
+## 🔐 Security
+
+- **Input Validation**: All forms include client-side validation
+- **XSS Protection**: React's built-in XSS protection
+- **HTTPS Ready**: Production builds support HTTPS
+- **Secure Authentication**: JWT tokens with proper storage
+
+## 📊 Performance
+
+### Optimization Features
+- **Code Splitting**: Automatic route-based splitting
+- **Image Optimization**: Optimized image loading
+- **Lazy Loading**: Components loaded on demand
+- **Caching**: Browser caching for static assets
+
+### Bundle Analysis
+```bash
+npm run build
+npx serve -s build
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -161,23 +204,10 @@ docker-compose up postgres -d
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Submit a pull request
 
-## Security Considerations
+## 📝 License
 
-- Input validation on all endpoints
-- JWT tokens for authentication
-- Age verification (21+ requirement)
-- Rate limiting recommended for production
-
-## Known Issues/Limitations
-
-1. **Demo Authentication**: Simplified JWT implementation
-2. **Mock Data**: Sports data is hardcoded for demo
-3. **Production Security**: Password hashing needs enhancement for production
-
-## License
-
-This project is licensed under the MIT License.
+This project is part of the PlayerBet platform and follows the main project's MIT license.
 
 ---
 
-For detailed setup instructions, see individual README files in each directory.
+For more information about the complete PlayerBet platform, see the main project README.
