@@ -18,14 +18,15 @@ import { API_CONFIG } from '../utils/Constants';
 
 const DashboardScreen = ({ navigation }) => {
   const { user, handleLogout } = useUser();
-  const [activeSport, setActiveSport] = useState('basketball_nba');
+  const [activeSport, setActiveSport] = useState(null); // Start with null until we load sports
+  const [availableSports, setAvailableSports] = useState([]); // NEW: Dynamic sports list
+  const [sportsLoading, setSportsLoading] = useState(true); // NEW: Loading state for sports
   const [bettingSlip, setBettingSlip] = useState([]);
   const [showBettingSlip, setShowBettingSlip] = useState(false);
   const [betAmount, setBetAmount] = useState(10);
   const [betMode, setBetMode] = useState('beast');
   const [searchTerm, setSearchTerm] = useState('');
 
-  
   // API Data State
   const [gamesData, setGamesData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,77 @@ const DashboardScreen = ({ navigation }) => {
 
   const safetyMultipliers = {
     2: 2.5, 3: 4, 4: 7, 5: 12, 6: 20, 7: 30, 8: 45, 9: 65, 10: 90
+  };
+
+  // NEW: Fetch available sports with data
+  const fetchAvailableSports = async () => {
+    try {
+      setSportsLoading(true);
+      console.log('Fetching available sports with data...');
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}/games/sports-with-data`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log(`Sports API response status: ${response.status}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch sports`);
+      }
+
+      const sports = await response.json();
+      console.log('Available sports with data:', sports);
+
+      if (sports && Array.isArray(sports) && sports.length > 0) {
+        // Sort sports by priority, then by label
+        const sortedSports = sports.sort((a, b) => {
+          if (a.displayInfo.priority && !b.displayInfo.priority) return -1;
+          if (!a.displayInfo.priority && b.displayInfo.priority) return 1;
+          return a.displayInfo.label.localeCompare(b.displayInfo.label);
+        });
+
+        setAvailableSports(sortedSports);
+        
+        // Set the first available sport as active if none is selected
+        if (!activeSport && sortedSports.length > 0) {
+          const defaultSport = sortedSports[0];
+          setActiveSport(defaultSport.key);
+          console.log(`Set default sport to: ${defaultSport.key}`);
+        }
+      } else {
+        console.warn('No sports with data available');
+        setAvailableSports([]);
+      }
+    } catch (error) {
+      console.error('Error fetching available sports:', error);
+      // Fallback to original sports if API fails
+      setAvailableSports([
+        {
+          key: 'soccer_epl',
+          title: 'EPL',
+          displayInfo: { label: 'Football', icon: 'football-outline', priority: true }
+        },
+        {
+          key: 'basketball_nba',
+          title: 'NBA',
+          displayInfo: { label: 'Basketball', icon: 'basketball-outline', priority: true }
+        },
+        {
+          key: 'americanfootball_nfl',
+          title: 'NFL',
+          displayInfo: { label: 'NFL', icon: 'american-football-outline', priority: true }
+        }
+      ]);
+      
+      if (!activeSport) {
+        setActiveSport('soccer_epl');
+      }
+    } finally {
+      setSportsLoading(false);
+    }
   };
 
   // Fetch games data from API with enhanced fallback logic
@@ -69,13 +141,13 @@ const DashboardScreen = ({ navigation }) => {
       const games = await response.json();
       console.log('Raw API Response:', games);
 
-      // ENHANCED: Check if response is valid and has usable data
+      // Check if response is valid and has usable data
       if (!games || !Array.isArray(games) || games.length === 0) {
         console.log(`Invalid or empty API response for ${sportKey}, using fallback data`);
         throw new Error('Empty or invalid API response');
       }
 
-      // ENHANCED: Check if any games have missing players data
+      // Check if any games have missing players data
       const hasValidPlayers = games.some(game => 
         game.players && 
         Array.isArray(game.players) && 
@@ -102,9 +174,9 @@ const DashboardScreen = ({ navigation }) => {
 
     } catch (error) {
       console.error(`Error fetching games for ${sportKey}:`, error);
-      setError(`Failed to load ${sportKey} games. ${error.message}`);
+      setError(`Failed to load ${getActiveSportLabel()} games. ${error.message}`);
       
-      // ENHANCED: Always provide fallback data when API fails or has no players
+      // Provide fallback data when API fails or has no players
       console.log(`Setting fallback data for ${sportKey}`);
       const fallbackData = generateFallbackData(sportKey);
       
@@ -160,7 +232,7 @@ const DashboardScreen = ({ navigation }) => {
       ];
     }
     
-    if (sportKey === 'soccer_epl') {
+    if (sportKey === 'soccer_epl' || sportKey === 'soccer_usa_mls' || sportKey === 'soccer_brazil_campeonato') {
       return [
         {
           id: 'fallback_soccer_game1',
@@ -192,31 +264,11 @@ const DashboardScreen = ({ navigation }) => {
               ]
             }
           ]
-        },
-        {
-          id: 'fallback_soccer_game2',
-          homeTeam: 'Arsenal',
-          awayTeam: 'Chelsea',
-          gameTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-          status: 'Upcoming',
-          players: [
-            {
-              id: 'fallback_saka',
-              name: 'Bukayo Saka',
-              team: 'Arsenal',
-              position: 'RW',
-              avatar: 'BS',
-              stats: [
-                { type: 'Shots on Target', line: 2.5 },
-                { type: 'Assists', line: 0.5 }
-              ]
-            }
-          ]
         }
       ];
     }
     
-    if (sportKey === 'americanfootball_nfl') {
+    if (sportKey === 'americanfootball_nfl' || sportKey === 'americanfootball_ncaaf') {
       return [
         {
           id: 'fallback_nfl_game1',
@@ -248,23 +300,53 @@ const DashboardScreen = ({ navigation }) => {
               ]
             }
           ]
-        },
+        }
+      ];
+    }
+
+    if (sportKey === 'baseball_mlb') {
+      return [
         {
-          id: 'fallback_nfl_game2',
-          homeTeam: '49ers',
-          awayTeam: 'Cowboys',
+          id: 'fallback_mlb_game1',
+          homeTeam: 'Yankees',
+          awayTeam: 'Red Sox',
+          gameTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+          status: 'Upcoming',
+          players: [
+            {
+              id: 'fallback_judge',
+              name: 'Aaron Judge',
+              team: 'Yankees',
+              position: 'RF',
+              avatar: 'AJ',
+              stats: [
+                { type: 'Home Runs', line: 0.5 },
+                { type: 'RBIs', line: 1.5 }
+              ]
+            }
+          ]
+        }
+      ];
+    }
+
+    if (sportKey === 'icehockey_nhl') {
+      return [
+        {
+          id: 'fallback_nhl_game1',
+          homeTeam: 'Oilers',
+          awayTeam: 'Leafs',
           gameTime: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
           status: 'Upcoming',
           players: [
             {
-              id: 'fallback_mccaffrey',
-              name: 'Christian McCaffrey',
-              team: '49ers',
-              position: 'RB',
+              id: 'fallback_mcdavid',
+              name: 'Connor McDavid',
+              team: 'Oilers',
+              position: 'C',
               avatar: 'CM',
               stats: [
-                { type: 'Rush Yards', line: 87.5 },
-                { type: 'Receiving Yards', line: 31.5 }
+                { type: 'Goals', line: 0.5 },
+                { type: 'Assists', line: 1.5 }
               ]
             }
           ]
@@ -275,21 +357,33 @@ const DashboardScreen = ({ navigation }) => {
     return [];
   };
 
+  // NEW: Get active sport label
+  const getActiveSportLabel = () => {
+    const sport = availableSports.find(s => s.key === activeSport);
+    return sport?.displayInfo?.label || 'Unknown Sport';
+  };
+
+  // Load sports on component mount
   useEffect(() => {
-    fetchGamesData(activeSport);
+    fetchAvailableSports();
   }, []);
 
+  // Load games when active sport changes
   useEffect(() => {
-    if (gamesData[activeSport]) {
-      setLoading(false);
-    } else {
-      fetchGamesData(activeSport);
+    if (activeSport) {
+      if (gamesData[activeSport]) {
+        setLoading(false);
+      } else {
+        fetchGamesData(activeSport);
+      }
     }
   }, [activeSport]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchGamesData(activeSport, true);
+    if (activeSport) {
+      await fetchGamesData(activeSport, true);
+    }
   };
 
   const convertApiDataToProps = (games) => {
@@ -365,7 +459,7 @@ const DashboardScreen = ({ navigation }) => {
     for (let i = 0; i < 5; i++) {
       const randomVariation = (Math.random() - 0.5) * variance;
       const value = Math.max(0, line + randomVariation);
-      form.push(Math.ceil(value)); // Changed to round up to nearest whole number
+      form.push(Math.ceil(value));
     }
     
     return form;
@@ -378,23 +472,23 @@ const DashboardScreen = ({ navigation }) => {
       return [];
     }
     
-      const props = convertApiDataToProps(data);
-  
-      // Apply search filter if search term exists
-      if (searchTerm.trim().length > 0) {
-        const searchLower = searchTerm.toLowerCase().trim();
-        return props.filter(prop => {
-          return (
-            prop.player.name.toLowerCase().includes(searchLower) ||
-            prop.player.team.toLowerCase().includes(searchLower) ||
-            prop.stat.toLowerCase().includes(searchLower) ||
-            prop.match.home.toLowerCase().includes(searchLower) ||
-            prop.match.away.toLowerCase().includes(searchLower)
-          );
-        });
-      }
-      
-      return props;
+    const props = convertApiDataToProps(data);
+
+    // Apply search filter if search term exists
+    if (searchTerm.trim().length > 0) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      return props.filter(prop => {
+        return (
+          prop.player.name.toLowerCase().includes(searchLower) ||
+          prop.player.team.toLowerCase().includes(searchLower) ||
+          prop.stat.toLowerCase().includes(searchLower) ||
+          prop.match.home.toLowerCase().includes(searchLower) ||
+          prop.match.away.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+    
+    return props;
   };
 
   const getMultiplier = (numSelections) => {
@@ -453,23 +547,19 @@ const DashboardScreen = ({ navigation }) => {
     setShowBettingSlip(true);
   };
 
-  // UPDATED: Handle card click to show player details modal
   const handleCardClick = (prop) => {
     setSelectedProp(prop);
     setShowPlayerModal(true);
   };
 
-  // Sport button mapping - UPDATED: reduced available width
-  const sportButtons = [
-    { key: 'soccer_epl', label: 'Football', available: true, icon: 'football-outline' },
-    { key: 'basketball_nba', label: 'Basketball', available: true, icon: 'basketball-outline' },
-    { key: 'americanfootball_nfl', label: 'NFL', available: true, icon: 'american-football-outline' },
-    { key: 'tennis', label: 'Tennis', available: false, icon: 'tennisball-outline' },
-    { key: 'golf', label: 'Golf', available: false, icon: 'golf-outline' },
-    { key: 'cricket', label: 'Cricket', available: false, icon: 'baseball-outline' }
-  ];
+  // UPDATED: Handle sport selection - only allow if sport exists in available sports
+  const handleSportSelection = (sportKey) => {
+    const sport = availableSports.find(s => s.key === sportKey);
+    if (sport) {
+      setActiveSport(sportKey);
+    }
+  };
 
-  // UPDATED: Simplified PlayerPropCard without recent form data
   const PlayerPropCard = ({ prop }) => {
     const selectedBet = bettingSlip.find(bet => bet.propId === prop.id);
     const isOverSelected = selectedBet?.selection === 'over';
@@ -520,15 +610,15 @@ const DashboardScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* SIMPLIFIED: Stat Details without recent form */}
+          {/* Stat Details */}
           <LinearGradient
             colors={['#0f172a', '#1e293b']}
             style={styles.statSection}
           >
-              <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit={true}>
-                {prop.stat.toUpperCase()}
-              </Text>            
-              <View style={styles.lineSection}>
+            <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit={true}>
+              {prop.stat.toUpperCase()}
+            </Text>            
+            <View style={styles.lineSection}>
               <View style={styles.lineNumber}>
                 <Text style={styles.lineText}>{prop.line}</Text>
                 <Text style={styles.lineLabel}>LINE</Text>
@@ -595,7 +685,7 @@ const DashboardScreen = ({ navigation }) => {
     );
   };
 
-  // NEW: Player Details Modal Component
+  // Player Details Modal Component
   const PlayerDetailsModal = () => {
     if (!selectedProp) return null;
 
@@ -694,8 +784,8 @@ const DashboardScreen = ({ navigation }) => {
                   <View style={styles.recentFormGrid}>
                     {selectedProp.recentForm.map((value, index) => (
                       <View key={index} style={styles.formGameCard}>
-                        <Text style={styles.formGameNumber}numberOfLines={1} adjustsFontSizeToFit={true}>Game {5-index}</Text>
-                        <Text style={[styles.formGameValue,{ color: value > selectedProp.line ? '#10b981' : '#ef4444' }]}numberOfLines={1} adjustsFontSizeToFit={true}>
+                        <Text style={styles.formGameNumber} numberOfLines={1} adjustsFontSizeToFit={true}>Game {5-index}</Text>
+                        <Text style={[styles.formGameValue,{ color: value > selectedProp.line ? '#10b981' : '#ef4444' }]} numberOfLines={1} adjustsFontSizeToFit={true}>
                           {value}
                         </Text>
                         <View style={[
@@ -766,10 +856,18 @@ const DashboardScreen = ({ navigation }) => {
       <Text style={styles.errorText}>{error}</Text>
       <TouchableOpacity 
         style={styles.retryButton} 
-        onPress={() => fetchGamesData(activeSport)}
+        onPress={() => activeSport && fetchGamesData(activeSport)}
       >
         <Text style={styles.retryButtonText}>Retry</Text>
       </TouchableOpacity>
+    </View>
+  );
+
+  // NEW: Sports loading view
+  const SportsLoadingView = () => (
+    <View style={styles.sportsLoadingContainer}>
+      <ActivityIndicator size="small" color="#2563eb" />
+      <Text style={styles.sportsLoadingText}>Loading sports...</Text>
     </View>
   );
 
@@ -813,70 +911,79 @@ const DashboardScreen = ({ navigation }) => {
           />
         }
       >
-      {/* UPDATED: Sports Navigation with icons */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.sportsNav}
-      >
-        {sportButtons.map((sport) => (
-          <TouchableOpacity
-            key={sport.key}
-            style={[
-              styles.sportButton,
-              activeSport === sport.key && styles.sportButtonActive,
-              !sport.available && styles.sportButtonDisabled
-            ]}
-            onPress={() => sport.available && setActiveSport(sport.key)}
-            disabled={!sport.available}
+        {/* UPDATED: Dynamic Sports Navigation - only shows sports with data, no "coming soon" */}
+        {sportsLoading ? (
+          <SportsLoadingView />
+        ) : availableSports.length > 0 ? (
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.sportsNav}
           >
-            <View style={styles.sportButtonContent}>
-              <Ionicons 
-                name={sport.icon} 
-                size={14} 
-                color={
-                  !sport.available ? '#6b7280' :
-                  activeSport === sport.key ? 'white' : '#9ca3af'
-                } 
-              />
-              <Text style={[
-                styles.sportButtonText,
-                activeSport === sport.key && styles.sportButtonTextActive,
-                !sport.available && styles.sportButtonTextDisabled
-              ]}>
-                {sport.label}
-              </Text>
-            </View>
-            {!sport.available && (
-              <Text style={styles.comingSoonText}>Soon</Text>
-            )}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            {availableSports.map((sport) => (
+              <TouchableOpacity
+                key={sport.key}
+                style={[
+                  styles.sportButton,
+                  activeSport === sport.key && styles.sportButtonActive
+                ]}
+                onPress={() => handleSportSelection(sport.key)}
+              >
+                <View style={styles.sportButtonContent}>
+                  <Ionicons 
+                    name={sport.displayInfo.icon} 
+                    size={14} 
+                    color={activeSport === sport.key ? 'white' : '#9ca3af'} 
+                  />
+                  <Text style={[
+                    styles.sportButtonText,
+                    activeSport === sport.key && styles.sportButtonTextActive
+                  ]}>
+                    {sport.displayInfo.label}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.noSportsContainer}>
+            <Text style={styles.noSportsText}>No sports available at the moment</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchAvailableSports}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search for players, teams, or props..."
-            placeholderTextColor="#9ca3af"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchTerm.length > 0 && (
-            <TouchableOpacity 
-              style={styles.searchClear} 
-              onPress={() => setSearchTerm('')}
-            >
-              <Ionicons name="close-circle" size={20} color="#9ca3af" />
-            </TouchableOpacity>
-          )}
-        </View>
+        {activeSport && (
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search for players, teams, or props..."
+              placeholderTextColor="#9ca3af"
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {searchTerm.length > 0 && (
+              <TouchableOpacity 
+                style={styles.searchClear} 
+                onPress={() => setSearchTerm('')}
+              >
+                <Ionicons name="close-circle" size={20} color="#9ca3af" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
         {/* Content */}
-        {loading ? (
+        {!activeSport ? (
+          <View style={styles.noSportsSelectedContainer}>
+            <Text style={styles.noSportsSelectedText}>Select a sport to view games</Text>
+          </View>
+        ) : loading ? (
           <LoadingView />
         ) : error && (!gamesData[activeSport] || gamesData[activeSport].length === 0) ? (
           <ErrorView />
@@ -888,7 +995,7 @@ const DashboardScreen = ({ navigation }) => {
               ))}
               {getCurrentSportData().length === 0 && (
                 <View style={styles.noDataContainer}>
-                  <Text style={styles.noDataText}>No games available for {sportButtons.find(s => s.key === activeSport)?.label}</Text>
+                  <Text style={styles.noDataText}>No games available for {getActiveSportLabel()}</Text>
                   <Text style={styles.noDataSubtext}>Try refreshing or check back later</Text>
                 </View>
               )}
@@ -1009,16 +1116,23 @@ const styles = {
 
   content: { flex: 1, paddingTop: 20 },
   
-  // UPDATED: Sports Navigation with icons
+  // NEW: Sports loading
+  sportsLoadingContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, gap: 8 },
+  sportsLoadingText: { fontSize: 14, color: '#9ca3af' },
+  
+  // UPDATED: Sports Navigation (dynamic)
   sportsNav: { paddingHorizontal: 20, gap: 6, marginBottom: 24 },
   sportButton: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#1f2937', borderRadius: 6, minWidth: 70, alignItems: 'center' },
   sportButtonActive: { backgroundColor: '#2563eb' },
-  sportButtonDisabled: { backgroundColor: '#374151', opacity: 0.6 },
   sportButtonContent: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   sportButtonText: { fontSize: 12, fontWeight: '600', color: '#9ca3af', textAlign: 'center' },
   sportButtonTextActive: { color: 'white' },
-  sportButtonTextDisabled: { color: '#6b7280' },
-  comingSoonText: { fontSize: 8, color: '#9ca3af', marginTop: 1 },
+  
+  // NEW: No sports available states
+  noSportsContainer: { alignItems: 'center', padding: 40 },
+  noSportsText: { fontSize: 16, color: 'white', marginBottom: 16 },
+  noSportsSelectedContainer: { alignItems: 'center', padding: 60 },
+  noSportsSelectedText: { fontSize: 16, color: '#9ca3af' },
   
   // Search
   searchContainer: { position: 'relative', marginBottom: 24, marginHorizontal: 20 },
@@ -1044,7 +1158,7 @@ const styles = {
   propsSection: { marginBottom: 80, paddingHorizontal: 20 },
   propsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
   
-  // UPDATED: Player Prop Card - Simplified without recent form
+  // Player Prop Card
   propCard: { backgroundColor: '#374151', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#4b5563', width: '48%' },
   propCardSelected: { borderColor: '#3b82f6', borderWidth: 2, backgroundColor: '#1e3a8a' },
   propCardHeader: { paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#475569' },
@@ -1064,7 +1178,6 @@ const styles = {
   playerLastName: { fontSize: 14, fontWeight: '700', color: 'white', textAlign: 'left', lineHeight: 16 },
   playerTeam: { fontSize: 11, fontWeight: '500', color: '#94a3b8', textAlign: 'left' },
   
-  // UPDATED: Simplified stat section
   statSection: { borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#334155',height: 64, justifyContent: 'space-between'},
   statLabel: { fontSize: 11, color: '#94a3b8', marginBottom: 6, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   lineSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -1072,22 +1185,17 @@ const styles = {
   lineText: { fontSize: 20, fontWeight: '900', color: 'white' },
   lineLabel: { fontSize: 10, color: '#60a5fa', fontWeight: '600' },
   
-  // NEW: Details button
-  detailsButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(59, 130, 246, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
-  detailsButtonText: { fontSize: 9, color: '#60a5fa', fontWeight: '600' },
-  
   bettingOptions: { flexDirection: 'row', gap: 6 },
   bettingButton: { flex: 1, paddingVertical: 6, paddingHorizontal: 4, backgroundColor: '#4b5563', borderWidth: 1, borderColor: '#6b7280', borderRadius: 6, alignItems: 'center', minHeight: 48, justifyContent: 'center' },
   bettingButtonSelected: { backgroundColor: '#059669', borderColor: '#10b981' },
   bettingButtonText: { fontSize: 12, fontWeight: '600', color: 'white', marginBottom: 2 },
   bettingButtonTextSelected: { fontWeight: '700' },
-  oddsText: { fontSize: 10, color: '#9ca3af', fontWeight: '500' },
   
   selectedIndicator: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 1 },
   checkmark: { width: 8, height: 8, backgroundColor: 'white', borderRadius: 4, justifyContent: 'center', alignItems: 'center' },
   selectedText: { fontSize: 8, color: 'white' },
   
-  // NEW: Player Details Modal Styles
+  // Player Details Modal Styles
   playerModal: { flex: 1, backgroundColor: '#000' },
   playerModalHeader: { paddingHorizontal: 20, paddingVertical: 16 },
   playerModalHeaderContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -1130,15 +1238,6 @@ const styles = {
   formGameNumber: { fontSize: 10, color: '#9ca3af', marginBottom: 4 },
   formGameValue: { fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
   formGameIndicator: { width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  
-  // Betting Analysis
-  bettingAnalysisSection: {},
-  bettingAnalysisTitle: { fontSize: 16, fontWeight: 'bold', color: 'white', marginBottom: 12 },
-  oddsComparison: { flexDirection: 'row', gap: 12 },
-  oddsOption: { flex: 1, backgroundColor: '#374151', borderRadius: 8, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#4b5563' },
-  oddsOptionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 4 },
-  oddsOptionValue: { fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 4 },
-  oddsOptionPayout: { fontSize: 10, color: '#60a5fa' },
   
   // Quick Actions
   quickActions: { flexDirection: 'row', gap: 12 },

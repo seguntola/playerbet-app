@@ -19,6 +19,11 @@ namespace PlayerBet.Api.Services
         Task<IEnumerable<SportInfo>> GetAvailableSportsAsync();
 
         /// <summary>
+        /// Get sports that have actual game data available (for mobile app filtering)
+        /// </summary>
+        Task<IEnumerable<SportInfo>> GetSportsWithDataAsync();
+
+        /// <summary>
         /// Get upcoming games for a specific sport
         /// </summary>
         Task<IEnumerable<GameInfo>> GetUpcomingGamesAsync(string sportKey, int daysAhead = 7);
@@ -53,61 +58,37 @@ namespace PlayerBet.Api.Services
         private readonly ICacheService _cacheService;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        // Player names mapping for generating avatars
+        // UPDATED: Enhanced player names mapping for generating avatars
         private static readonly Dictionary<string, string> PlayerAvatarMap = new()
         {
-            { "LeBron James", "LJ" },
-            { "Stephen Curry", "SC" },
-            { "Kevin Durant", "KD" },
-            { "Giannis Antetokounmpo", "GA" },
-            { "Luka Doncic", "LD" },
-            { "Anthony Davis", "AD" },
-            { "Jayson Tatum", "JT" },
-            { "Nikola Jokic", "NJ" },
-            { "Joel Embiid", "JE" },
-            { "Jimmy Butler", "JB" },
-            { "Damian Lillard", "DL" },
-            { "Kawhi Leonard", "KL" },
-            { "Paul George", "PG" },
-            { "Russell Westbrook", "RW" },
-            { "Chris Paul", "CP" },
-            { "Klay Thompson", "KT" },
-            { "Draymond Green", "DG" },
-            { "Kyrie Irving", "KI" },
-            { "James Harden", "JH" },
-            { "Devin Booker", "DB" },
-            // Football players
-            { "Patrick Mahomes", "PM" },
-            { "Josh Allen", "JA" },
-            { "Aaron Rodgers", "AR" },
-            { "Tom Brady", "TB" },
-            { "Lamar Jackson", "LJ" },
-            { "Justin Herbert", "JH" },
-            { "Joe Burrow", "JB" },
-            { "Dak Prescott", "DP" },
-            { "Russell Wilson", "RW" },
-            { "Tua Tagovailoa", "TT" },
-            { "Derrick Henry", "DH" },
-            { "Christian McCaffrey", "CM" },
-            { "Dalvin Cook", "DC" },
-            { "Ezekiel Elliott", "EE" },
-            { "Alvin Kamara", "AK" },
-            { "Travis Kelce", "TK" },
-            { "Davante Adams", "DA" },
-            { "Tyreek Hill", "TH" },
-            { "DeAndre Hopkins", "DH" },
-            { "Stefon Diggs", "SD" },
-            // Soccer players  
-            { "Erling Haaland", "EH" },
-            { "Mohamed Salah", "MS" },
-            { "Kevin De Bruyne", "KB" },
-            { "Bukayo Saka", "BS" },
-            { "Cole Palmer", "CP" },
-            { "Martin Ødegaard", "MØ" },
-            { "Marcus Rashford", "MR" },
-            { "Bruno Fernandes", "BF" },
-            { "Virgil van Dijk", "VD" },
-            { "Sadio Mane", "SM" }
+            // Basketball (NBA)
+            { "LeBron James", "LJ" }, { "Stephen Curry", "SC" }, { "Kevin Durant", "KD" },
+            { "Giannis Antetokounmpo", "GA" }, { "Luka Doncic", "LD" }, { "Anthony Davis", "AD" },
+            { "Jayson Tatum", "JT" }, { "Nikola Jokic", "NJ" }, { "Joel Embiid", "JE" },
+            { "Jimmy Butler", "JB" }, { "Damian Lillard", "DL" }, { "Kawhi Leonard", "KL" },
+            
+            // American Football (NFL)
+            { "Patrick Mahomes", "PM" }, { "Josh Allen", "JA" }, { "Aaron Rodgers", "AR" },
+            { "Tom Brady", "TB" }, { "Lamar Jackson", "LJ" }, { "Justin Herbert", "JH" },
+            { "Joe Burrow", "JB" }, { "Travis Kelce", "TK" }, { "Davante Adams", "DA" },
+            { "Tyreek Hill", "TH" }, { "DeAndre Hopkins", "DH" }, { "Stefon Diggs", "SD" },
+            
+            // Soccer/Football
+            { "Erling Haaland", "EH" }, { "Mohamed Salah", "MS" }, { "Kevin De Bruyne", "KB" },
+            { "Bukayo Saka", "BS" }, { "Cole Palmer", "CP" }, { "Martin Ødegaard", "MØ" },
+            { "Marcus Rashford", "MR" }, { "Bruno Fernandes", "BF" }, { "Virgil van Dijk", "VD" },
+            
+            // Baseball (MLB)
+            { "Mike Trout", "MT" }, { "Mookie Betts", "MB" }, { "Aaron Judge", "AJ" },
+            { "Ronald Acuña Jr.", "RA" }, { "Juan Soto", "JS" }, { "Vladimir Guerrero Jr.", "VG" },
+            
+            // Hockey (NHL)
+            { "Connor McDavid", "CM" }, { "Leon Draisaitl", "LD" }, { "Nathan MacKinnon", "NM" },
+            { "Auston Matthews", "AM" }, { "David Pastrnak", "DP" }, { "Erik Karlsson", "EK" },
+            
+            // Tennis
+            { "Novak Djokovic", "ND" }, { "Rafael Nadal", "RN" }, { "Carlos Alcaraz", "CA" },
+            { "Iga Swiatek", "IS" }, { "Aryna Sabalenka", "AS" }, { "Coco Gauff", "CG" },
         };
 
         public SportsDataService(
@@ -170,6 +151,63 @@ namespace PlayerBet.Api.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching available sports from TheOddsAPI");
+                return new List<SportInfo>();
+            }
+        }
+
+        // NEW: Get sports that have actual game data available
+        public async Task<IEnumerable<SportInfo>> GetSportsWithDataAsync()
+        {
+            const string cacheKey = "sports_with_data";
+            
+            try
+            {
+                // Try cache first (cached for 30 minutes)
+                var cachedSports = await _cacheService.GetAsync<IEnumerable<SportInfo>>(cacheKey);
+                if (cachedSports != null)
+                {
+                    return cachedSports;
+                }
+
+                var availableSports = await GetAvailableSportsAsync();
+                var sportsWithData = new List<SportInfo>();
+
+                // Check each sport for actual game data
+                foreach (var sport in availableSports)
+                {
+                    try
+                    {
+                        var games = await GetUpcomingGamesAsync(sport.Key, 14); // Check next 2 weeks
+                        if (games.Any())
+                        {
+                            _logger.LogDebug($"Sport {sport.Key} has {games.Count()} games available");
+                            sportsWithData.Add(sport);
+                        }
+                        else
+                        {
+                            _logger.LogDebug($"Sport {sport.Key} has no games available");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, $"Error checking games for sport {sport.Key}");
+                        // Skip this sport rather than include it
+                        continue;
+                    }
+                    
+                    // Add small delay to respect rate limits
+                    await Task.Delay(100);
+                }
+
+                // Cache for 30 minutes (shorter than available sports cache)
+                await _cacheService.SetAsync(cacheKey, sportsWithData, TimeSpan.FromMinutes(30));
+
+                _logger.LogInformation($"Found {sportsWithData.Count} sports with available data");
+                return sportsWithData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking sports with data availability");
                 return new List<SportInfo>();
             }
         }
@@ -362,21 +400,52 @@ namespace PlayerBet.Api.Services
 
         #region Private Helper Methods
 
-        private static bool IsSupportedSport(string sportKey)
+        // UPDATED: Expanded supported sports check
+        private bool IsSupportedSport(string sportKey)
         {
-            var supportedSports = new[] { "basketball_nba", "americanfootball_nfl", "soccer_epl", "soccer_epl" };
-            return supportedSports.Contains(sportKey);
+            return _config.SupportedSports.Contains(sportKey);
         }
 
+        // UPDATED: Expanded player props markets for more sports
         private static string[] GetPlayerPropsMarkets(string sportKey)
         {
             return sportKey switch
             {
-                "basketball_nba" => new[] { "player_points", "player_rebounds", "player_assists", "player_threes", 
-                    "player_blocks", "player_steals", "player_points_rebounds_assists" },
-                "americanfootball_nfl" => new[] { "player_pass_yds", "player_pass_tds", "player_rush_yds", 
-                    "player_rush_tds", "player_reception_yds", "player_receptions" },
-                "soccer_epl" => new[] { "player_shots_on_target", "player_shots", "player_assists" },
+                // Basketball
+                "basketball_nba" or "basketball_ncaab" => new[] { 
+                    "player_points", "player_rebounds", "player_assists", "player_threes", 
+                    "player_blocks", "player_steals", "player_points_rebounds_assists" 
+                },
+                
+                // American Football
+                "americanfootball_nfl" or "americanfootball_ncaaf" => new[] { 
+                    "player_pass_yds", "player_pass_tds", "player_rush_yds", 
+                    "player_rush_tds", "player_reception_yds", "player_receptions" 
+                },
+                
+                // Soccer
+                "soccer_epl" or "soccer_usa_mls" or "soccer_brazil_campeonato" or "soccer_australia_aleague" => new[] { 
+                    "player_shots_on_target", "player_shots", "player_assists" 
+                },
+                
+                // Baseball
+                "baseball_mlb" => new[] {
+                    "batter_hits", "batter_home_runs", "batter_rbis", "batter_runs_scored",
+                    "pitcher_strikeouts", "pitcher_hits_allowed", "pitcher_walks"
+                },
+                
+                // Hockey
+                "icehockey_nhl" => new[] {
+                    "player_goals", "player_assists", "player_points", "player_shots_on_goal",
+                    "goalie_saves", "goalie_goals_against"
+                },
+                
+                // Tennis
+                "tennis_atp_french_open" or "tennis_wta_french_open" => new[] {
+                    "player_sets", "player_games", "player_aces"
+                },
+                
+                // Default fallback
                 _ => new[] { "player_points" }
             };
         }
@@ -577,14 +646,19 @@ namespace PlayerBet.Api.Services
             return Math.Abs(hash) % 2 == 0 ? homeTeam : awayTeam;
         }
 
+        // UPDATED: Enhanced player position determination for multiple sports
         private static string DeterminePlayerPosition(string playerName, string sportKey)
         {
             // Mock position assignment - in real implementation this would come from a database
             var positions = sportKey switch
             {
-                "basketball_nba" => new[] { "PG", "SG", "SF", "PF", "C" },
-                "americanfootball_nfl" => new[] { "QB", "RB", "WR", "TE", "K" },
-                _ => new[] { "MID", "FWD", "DEF", "GK" }
+                "basketball_nba" or "basketball_ncaab" => new[] { "PG", "SG", "SF", "PF", "C" },
+                "americanfootball_nfl" or "americanfootball_ncaaf" => new[] { "QB", "RB", "WR", "TE", "K", "DEF" },
+                "baseball_mlb" => new[] { "P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "DH" },
+                "icehockey_nhl" => new[] { "C", "LW", "RW", "LD", "RD", "G" },
+                "tennis_atp_french_open" or "tennis_wta_french_open" => new[] { "Player" },
+                // Soccer
+                _ => new[] { "GK", "DEF", "MID", "FWD" }
             };
             
             var hash = Math.Abs(playerName.GetHashCode());
@@ -599,8 +673,10 @@ namespace PlayerBet.Api.Services
             
             var variance = sportKey switch
             {
-                "basketball_nba" => line * 0.3m, // 30% variance for NBA
-                "americanfootball_nfl" => line * 0.4m, // 40% variance for NFL
+                "basketball_nba" or "basketball_ncaab" => line * 0.3m, // 30% variance for NBA
+                "americanfootball_nfl" or "americanfootball_ncaaf" => line * 0.4m, // 40% variance for NFL
+                "baseball_mlb" => line * 0.35m, // 35% variance for MLB
+                "icehockey_nhl" => line * 0.45m, // 45% variance for NHL (more variance)
                 _ => line * 0.25m
             };
 
@@ -614,10 +690,12 @@ namespace PlayerBet.Api.Services
             return form;
         }
 
+        // UPDATED: Enhanced stat type formatting for multiple sports
         private static string FormatStatType(string marketKey)
         {
             return marketKey switch
             {
+                // Basketball
                 "player_points" => "Points",
                 "player_rebounds" => "Rebounds", 
                 "player_assists" => "Assists",
@@ -625,14 +703,40 @@ namespace PlayerBet.Api.Services
                 "player_blocks" => "Blocks",
                 "player_steals" => "Steals",
                 "player_points_rebounds_assists" => "Points + Rebounds + Assists",
+                
+                // Football
                 "player_pass_yds" => "Pass Yards",
                 "player_pass_tds" => "Pass Touchdowns",
                 "player_rush_yds" => "Rush Yards",
                 "player_rush_tds" => "Rush Touchdowns",
                 "player_reception_yds" => "Receiving Yards",
                 "player_receptions" => "Receptions",
+                
+                // Soccer
                 "player_shots_on_target" => "Shots on Target",
                 "player_shots" => "Shots",
+                
+                // Baseball
+                "batter_hits" => "Hits",
+                "batter_home_runs" => "Home Runs",
+                "batter_rbis" => "RBIs",
+                "batter_runs_scored" => "Runs Scored",
+                "pitcher_strikeouts" => "Strikeouts",
+                "pitcher_hits_allowed" => "Hits Allowed",
+                "pitcher_walks" => "Walks",
+                
+                // Hockey
+                "player_goals" => "Goals",
+                "player_shots_on_goal" => "Shots on Goal",
+                "goalie_saves" => "Saves",
+                "goalie_goals_against" => "Goals Against",
+                
+                // Tennis
+                "player_sets" => "Sets Won",
+                "player_games" => "Games Won",
+                "player_aces" => "Aces",
+                
+                // Default
                 _ => marketKey.Replace("player_", "").Replace("_", " ")
             };
         }
