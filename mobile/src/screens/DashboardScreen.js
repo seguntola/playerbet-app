@@ -23,6 +23,8 @@ const DashboardScreen = ({ navigation }) => {
   const [showBettingSlip, setShowBettingSlip] = useState(false);
   const [betAmount, setBetAmount] = useState(10);
   const [betMode, setBetMode] = useState('beast');
+  const [searchTerm, setSearchTerm] = useState('');
+
   
   // API Data State
   const [gamesData, setGamesData] = useState({});
@@ -363,7 +365,7 @@ const DashboardScreen = ({ navigation }) => {
     for (let i = 0; i < 5; i++) {
       const randomVariation = (Math.random() - 0.5) * variance;
       const value = Math.max(0, line + randomVariation);
-      form.push(parseFloat(value.toFixed(1)));
+      form.push(Math.ceil(value)); // Changed to round up to nearest whole number
     }
     
     return form;
@@ -376,7 +378,23 @@ const DashboardScreen = ({ navigation }) => {
       return [];
     }
     
-    return convertApiDataToProps(data);
+      const props = convertApiDataToProps(data);
+  
+      // Apply search filter if search term exists
+      if (searchTerm.trim().length > 0) {
+        const searchLower = searchTerm.toLowerCase().trim();
+        return props.filter(prop => {
+          return (
+            prop.player.name.toLowerCase().includes(searchLower) ||
+            prop.player.team.toLowerCase().includes(searchLower) ||
+            prop.stat.toLowerCase().includes(searchLower) ||
+            prop.match.home.toLowerCase().includes(searchLower) ||
+            prop.match.away.toLowerCase().includes(searchLower)
+          );
+        });
+      }
+      
+      return props;
   };
 
   const getMultiplier = (numSelections) => {
@@ -443,12 +461,12 @@ const DashboardScreen = ({ navigation }) => {
 
   // Sport button mapping - UPDATED: reduced available width
   const sportButtons = [
-    { key: 'soccer_epl', label: 'Football', available: true },
-    { key: 'basketball_nba', label: 'Basketball', available: true },
-    { key: 'americanfootball_nfl', label: 'NFL', available: true },
-    { key: 'tennis', label: 'Tennis', available: false },
-    { key: 'golf', label: 'Golf', available: false },
-    { key: 'cricket', label: 'Cricket', available: false }
+    { key: 'soccer_epl', label: 'Football', available: true, icon: 'football-outline' },
+    { key: 'basketball_nba', label: 'Basketball', available: true, icon: 'basketball-outline' },
+    { key: 'americanfootball_nfl', label: 'NFL', available: true, icon: 'american-football-outline' },
+    { key: 'tennis', label: 'Tennis', available: false, icon: 'tennisball-outline' },
+    { key: 'golf', label: 'Golf', available: false, icon: 'golf-outline' },
+    { key: 'cricket', label: 'Cricket', available: false, icon: 'baseball-outline' }
   ];
 
   // UPDATED: Simplified PlayerPropCard without recent form data
@@ -507,8 +525,10 @@ const DashboardScreen = ({ navigation }) => {
             colors={['#0f172a', '#1e293b']}
             style={styles.statSection}
           >
-            <Text style={styles.statLabel}>{prop.stat.toUpperCase()}</Text>
-            <View style={styles.lineSection}>
+              <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit={true}>
+                {prop.stat.toUpperCase()}
+              </Text>            
+              <View style={styles.lineSection}>
               <View style={styles.lineNumber}>
                 <Text style={styles.lineText}>{prop.line}</Text>
                 <Text style={styles.lineLabel}>LINE</Text>
@@ -674,11 +694,8 @@ const DashboardScreen = ({ navigation }) => {
                   <View style={styles.recentFormGrid}>
                     {selectedProp.recentForm.map((value, index) => (
                       <View key={index} style={styles.formGameCard}>
-                        <Text style={styles.formGameNumber}>Game {5-index}</Text>
-                        <Text style={[
-                          styles.formGameValue,
-                          { color: value > selectedProp.line ? '#10b981' : '#ef4444' }
-                        ]}>
+                        <Text style={styles.formGameNumber}numberOfLines={1} adjustsFontSizeToFit={true}>Game {5-index}</Text>
+                        <Text style={[styles.formGameValue,{ color: value > selectedProp.line ? '#10b981' : '#ef4444' }]}numberOfLines={1} adjustsFontSizeToFit={true}>
                           {value}
                         </Text>
                         <View style={[
@@ -796,23 +813,32 @@ const DashboardScreen = ({ navigation }) => {
           />
         }
       >
-        {/* UPDATED: Sports Navigation with smaller buttons */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.sportsNav}
-        >
-          {sportButtons.map((sport) => (
-            <TouchableOpacity
-              key={sport.key}
-              style={[
-                styles.sportButton,
-                activeSport === sport.key && styles.sportButtonActive,
-                !sport.available && styles.sportButtonDisabled
-              ]}
-              onPress={() => sport.available && setActiveSport(sport.key)}
-              disabled={!sport.available}
-            >
+      {/* UPDATED: Sports Navigation with icons */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.sportsNav}
+      >
+        {sportButtons.map((sport) => (
+          <TouchableOpacity
+            key={sport.key}
+            style={[
+              styles.sportButton,
+              activeSport === sport.key && styles.sportButtonActive,
+              !sport.available && styles.sportButtonDisabled
+            ]}
+            onPress={() => sport.available && setActiveSport(sport.key)}
+            disabled={!sport.available}
+          >
+            <View style={styles.sportButtonContent}>
+              <Ionicons 
+                name={sport.icon} 
+                size={14} 
+                color={
+                  !sport.available ? '#6b7280' :
+                  activeSport === sport.key ? 'white' : '#9ca3af'
+                } 
+              />
               <Text style={[
                 styles.sportButtonText,
                 activeSport === sport.key && styles.sportButtonTextActive,
@@ -820,12 +846,13 @@ const DashboardScreen = ({ navigation }) => {
               ]}>
                 {sport.label}
               </Text>
-              {!sport.available && (
-                <Text style={styles.comingSoonText}>Soon</Text>
-              )}
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+            </View>
+            {!sport.available && (
+              <Text style={styles.comingSoonText}>Soon</Text>
+            )}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -834,9 +861,20 @@ const DashboardScreen = ({ navigation }) => {
             style={styles.searchInput}
             placeholder="Search for players, teams, or props..."
             placeholderTextColor="#9ca3af"
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            autoCapitalize="none"
+            autoCorrect={false}
           />
+          {searchTerm.length > 0 && (
+            <TouchableOpacity 
+              style={styles.searchClear} 
+              onPress={() => setSearchTerm('')}
+            >
+              <Ionicons name="close-circle" size={20} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
         </View>
-
         {/* Content */}
         {loading ? (
           <LoadingView />
@@ -937,10 +975,6 @@ const DashboardScreen = ({ navigation }) => {
           <Text style={[styles.navText, { color: '#2563eb' }]}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="grid-outline" size={20} color="#9ca3af" />
-          <Text style={styles.navText}>Sports</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
           <Ionicons name="trophy-outline" size={20} color="#9ca3af" />
           <Text style={styles.navText}>My Bets</Text>
         </TouchableOpacity>
@@ -975,11 +1009,12 @@ const styles = {
 
   content: { flex: 1, paddingTop: 20 },
   
-  // UPDATED: Sports Navigation with smaller buttons
+  // UPDATED: Sports Navigation with icons
   sportsNav: { paddingHorizontal: 20, gap: 6, marginBottom: 24 },
   sportButton: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#1f2937', borderRadius: 6, minWidth: 70, alignItems: 'center' },
   sportButtonActive: { backgroundColor: '#2563eb' },
   sportButtonDisabled: { backgroundColor: '#374151', opacity: 0.6 },
+  sportButtonContent: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   sportButtonText: { fontSize: 12, fontWeight: '600', color: '#9ca3af', textAlign: 'center' },
   sportButtonTextActive: { color: 'white' },
   sportButtonTextDisabled: { color: '#6b7280' },
@@ -989,7 +1024,8 @@ const styles = {
   searchContainer: { position: 'relative', marginBottom: 24, marginHorizontal: 20 },
   searchIcon: { position: 'absolute', left: 16, top: 12, zIndex: 1 },
   searchInput: { backgroundColor: '#1f2937', borderWidth: 1, borderColor: '#374151', borderRadius: 8, paddingLeft: 48, paddingRight: 16, paddingVertical: 12, color: 'white', fontSize: 14 },
-  
+  searchClear: { position: 'absolute', right: 16, top: 12, zIndex: 1 },
+
   // Loading/Error States
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
   loadingText: { marginTop: 16, fontSize: 16, color: '#9ca3af' },
@@ -1029,7 +1065,7 @@ const styles = {
   playerTeam: { fontSize: 11, fontWeight: '500', color: '#94a3b8', textAlign: 'left' },
   
   // UPDATED: Simplified stat section
-  statSection: { borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#334155' },
+  statSection: { borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#334155',height: 64, justifyContent: 'space-between'},
   statLabel: { fontSize: 11, color: '#94a3b8', marginBottom: 6, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   lineSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   lineNumber: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
@@ -1041,7 +1077,7 @@ const styles = {
   detailsButtonText: { fontSize: 9, color: '#60a5fa', fontWeight: '600' },
   
   bettingOptions: { flexDirection: 'row', gap: 6 },
-  bettingButton: { flex: 1, paddingVertical: 10, paddingHorizontal: 4, backgroundColor: '#4b5563', borderWidth: 1, borderColor: '#6b7280', borderRadius: 6, alignItems: 'center', minHeight: 60, justifyContent: 'center' },
+  bettingButton: { flex: 1, paddingVertical: 6, paddingHorizontal: 4, backgroundColor: '#4b5563', borderWidth: 1, borderColor: '#6b7280', borderRadius: 6, alignItems: 'center', minHeight: 48, justifyContent: 'center' },
   bettingButtonSelected: { backgroundColor: '#059669', borderColor: '#10b981' },
   bettingButtonText: { fontSize: 12, fontWeight: '600', color: 'white', marginBottom: 2 },
   bettingButtonTextSelected: { fontWeight: '700' },
