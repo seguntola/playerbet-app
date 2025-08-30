@@ -7,7 +7,7 @@ namespace PlayerBet.Api.Configuration
     {
         public const string SectionName = "TheOddsAPI";
 
-        public string ApiKey { get; set; } = "c3447fc9a880a313dd180c42264ea244";
+        public string ApiKey { get; set; } = "8d616dd69ece083f29419a7e96a54039";
         public string BaseUrl { get; set; } = "https://api.the-odds-api.com";
         public int TimeoutSeconds { get; set; } = 30;
         public bool UseCache { get; set; } = true;

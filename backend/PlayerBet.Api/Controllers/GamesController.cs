@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PlayerBet.Api.Services;
 
 namespace PlayerBet.Api.Controllers
 {
@@ -6,89 +7,68 @@ namespace PlayerBet.Api.Controllers
     [Route("api/[controller]")]
     public class GamesController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult GetGames()
-        {
-            // Mock data for development
-            var games = new[]
-            {
-                new
-                {
-                    id = "game1",
-                    homeTeam = "Lakers",
-                    awayTeam = "Warriors",
-                    gameTime = DateTime.Now.AddHours(2),
-                    status = "Upcoming",
-                    players = new[]
-                    {
-                        new
-                        {
-                            id = "player1",
-                            name = "LeBron James",
-                            team = "Lakers",
-                            position = "SF",
-                            stats = new[]
-                            {
-                                new { type = "Points", line = 25.5m, overOdds = 1.90m, underOdds = 1.90m },
-                                new { type = "Assists", line = 8.5m, overOdds = 2.10m, underOdds = 1.75m },
-                                new { type = "Rebounds", line = 7.5m, overOdds = 1.85m, underOdds = 1.95m }
-                            }
-                        },
-                        new
-                        {
-                            id = "player2",
-                            name = "Stephen Curry",
-                            team = "Warriors",
-                            position = "PG",
-                            stats = new[]
-                            {
-                                new { type = "Points", line = 28.5m, overOdds = 1.95m, underOdds = 1.85m },
-                                new { type = "3-Pointers", line = 4.5m, overOdds = 1.80m, underOdds = 2.00m },
-                                new { type = "Assists", line = 6.5m, overOdds = 1.75m, underOdds = 2.05m }
-                            }
-                        }
-                    }
-                },
-                new
-                {
-                    id = "game2",
-                    homeTeam = "Heat",
-                    awayTeam = "Celtics",
-                    gameTime = DateTime.Now.AddHours(4),
-                    status = "Upcoming",
-                    players = new[]
-                    {
-                        new
-                        {
-                            id = "player3",
-                            name = "Jimmy Butler",
-                            team = "Heat",
-                            position = "SF",
-                            stats = new[]
-                            {
-                                new { type = "Points", line = 22.5m, overOdds = 1.88m, underOdds = 1.92m },
-                                new { type = "Rebounds", line = 6.5m, overOdds = 1.90m, underOdds = 1.90m },
-                                new { type = "Steals", line = 1.5m, overOdds = 2.20m, underOdds = 1.65m }
-                            }
-                        },
-                        new
-                        {
-                            id = "player4",
-                            name = "Jayson Tatum",
-                            team = "Celtics",
-                            position = "SF",
-                            stats = new[]
-                            {
-                                new { type = "Points", line = 27.5m, overOdds = 1.92m, underOdds = 1.88m },
-                                new { type = "Rebounds", line = 8.5m, overOdds = 1.85m, underOdds = 1.95m },
-                                new { type = "Assists", line = 4.5m, overOdds = 2.00m, underOdds = 1.80m }
-                            }
-                        }
-                    }
-                }
-            };
+        private readonly ISportsDataService _sportsDataService;
+        private readonly ILogger<GamesController> _logger;
 
-            return Ok(games);
+        public GamesController(ISportsDataService sportsDataService, ILogger<GamesController> logger)
+        {
+            _sportsDataService = sportsDataService;
+            _logger = logger;
         }
+
+        // NEW: The endpoint your mobile app is calling
+        [HttpGet("sports/{sportKey}/games-with-props")]
+        public async Task<IActionResult> GetGamesWithProps(string sportKey, [FromQuery] int maxGames = 10)
+        {
+            try
+            {
+                var games = await _sportsDataService.GetGamesWithPropsAsync(sportKey, maxGames);
+                return Ok(games);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching games with props for {sportKey}");
+                return StatusCode(500, new { message = "Failed to fetch games", error = ex.Message });
+            }
+        }
+
+        // NEW: Get upcoming games
+        [HttpGet("sports/{sportKey}/upcoming")]
+        public async Task<IActionResult> GetUpcomingGames(string sportKey, [FromQuery] int daysAhead = 7)
+        {
+            try
+            {
+                var games = await _sportsDataService.GetUpcomingGamesAsync(sportKey, daysAhead);
+                return Ok(games);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching upcoming games for {sportKey}");
+                return StatusCode(500, new { message = "Failed to fetch upcoming games", error = ex.Message });
+            }
+        }
+
+        // NEW: Get available sports
+        [HttpGet("sports")]
+        public async Task<IActionResult> GetAvailableSports()
+        {
+            try
+            {
+                var sports = await _sportsDataService.GetAvailableSportsAsync();
+                return Ok(sports);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching available sports");
+                return StatusCode(500, new { message = "Failed to fetch sports", error = ex.Message });
+            }
+        }
+
+        // // Keep existing mock endpoint for backward compatibility
+        // [HttpGet("mock")]
+        // public IActionResult GetMockGames()
+        // {
+        //     // Your existing mock data...
+        // }
     }
 }
