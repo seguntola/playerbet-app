@@ -18,7 +18,7 @@ import { API_CONFIG } from '../utils/Constants';
 
 const DashboardScreen = ({ navigation }) => {
   const { user, handleLogout } = useUser();
-  const [activeSport, setActiveSport] = useState('basketball_nba'); // API sport keys
+  const [activeSport, setActiveSport] = useState('basketball_nba');
   const [bettingSlip, setBettingSlip] = useState([]);
   const [showBettingSlip, setShowBettingSlip] = useState(false);
   const [betAmount, setBetAmount] = useState(10);
@@ -29,6 +29,11 @@ const DashboardScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [dataVersion, setDataVersion] = useState(0);
+
+  // Player Details Modal State
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [selectedProp, setSelectedProp] = useState(null);
 
   const beastMultipliers = {
     2: 3, 3: 6, 4: 10, 5: 20, 6: 35, 7: 50, 8: 75, 9: 100, 10: 150
@@ -38,23 +43,13 @@ const DashboardScreen = ({ navigation }) => {
     2: 2.5, 3: 4, 4: 7, 5: 12, 6: 20, 7: 30, 8: 45, 9: 65, 10: 90
   };
 
-  // Sports mapping for display vs API keys
-  const sportsMapping = {
-    'football': 'soccer_epl',
-    'basketball': 'basketball_nba',
-    'americanfootball': 'americanfootball_nfl',
-    'tennis': 'tennis', // TODO: Add tennis support when available
-    'golf': 'golf', // TODO: Add golf support when available
-    'cricket': 'cricket', // TODO: Add cricket support when available
-  };
-
-  // Fetch games data from API
+  // Fetch games data from API with enhanced fallback logic
   const fetchGamesData = async (sportKey, forceRefresh = false) => {
     try {
       if (!forceRefresh) setLoading(true);
       setError(null);
 
-      console.log(`🔍 Fetching games for sport: ${sportKey}`);
+      console.log(`Fetching games for sport: ${sportKey}`);
       
       const response = await fetch(`${API_CONFIG.BASE_URL}/games/sports/${sportKey}/games-with-props?maxGames=6`, {
         method: 'GET',
@@ -63,38 +58,69 @@ const DashboardScreen = ({ navigation }) => {
         },
       });
 
-      console.log(`📊 Games API response status: ${response.status}`);
+      console.log(`Games API response status: ${response.status}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch games`);
       }
 
       const games = await response.json();
-      console.log(`📋 Games API result:`, games);
+      console.log('Raw API Response:', games);
+
+      // ENHANCED: Check if response is valid and has usable data
+      if (!games || !Array.isArray(games) || games.length === 0) {
+        console.log(`Invalid or empty API response for ${sportKey}, using fallback data`);
+        throw new Error('Empty or invalid API response');
+      }
+
+      // ENHANCED: Check if any games have missing players data
+      const hasValidPlayers = games.some(game => 
+        game.players && 
+        Array.isArray(game.players) && 
+        game.players.length > 0 &&
+        game.players.some(player => 
+          player.stats && 
+          Array.isArray(player.stats) && 
+          player.stats.length > 0
+        )
+      );
+
+      if (!hasValidPlayers) {
+        console.log(`No valid player data found in API response for ${sportKey}, using fallback data`);
+        throw new Error('No valid player data in API response');
+      }
 
       setGamesData(prev => ({
         ...prev,
         [sportKey]: games
       }));
+      
+      setDataVersion(v => v + 1);
+      console.log(`Successfully loaded ${games.length} games for ${sportKey}`);
 
     } catch (error) {
-      console.error(`❌ Error fetching games for ${sportKey}:`, error);
+      console.error(`Error fetching games for ${sportKey}:`, error);
       setError(`Failed to load ${sportKey} games. ${error.message}`);
       
-      // Fallback to mock data for demo purposes
+      // ENHANCED: Always provide fallback data when API fails or has no players
+      console.log(`Setting fallback data for ${sportKey}`);
+      const fallbackData = generateFallbackData(sportKey);
+      
       setGamesData(prev => ({
         ...prev,
-        [sportKey]: generateFallbackData(sportKey)
+        [sportKey]: fallbackData
       }));
+      
+      setDataVersion(v => v + 1);
     } finally {
       setLoading(false);
       if (forceRefresh) setRefreshing(false);
     }
   };
 
-  // Generate fallback data when API fails
+  // Enhanced fallback data with all sports
   const generateFallbackData = (sportKey) => {
-    console.log(`🔄 Using fallback data for ${sportKey}`);
+    console.log(`Using fallback data for ${sportKey}`);
     
     if (sportKey === 'basketball_nba') {
       return [
@@ -102,29 +128,29 @@ const DashboardScreen = ({ navigation }) => {
           id: 'fallback_game1',
           homeTeam: 'Lakers',
           awayTeam: 'Warriors',
-          gameTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+          gameTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
           status: 'Upcoming',
           players: [
             {
               id: 'fallback_lebron',
               name: 'LeBron James',
               team: 'Lakers',
-              position: 'SF', 
-              avatar: 'LJ', // Hard-coded: Avatar generation
+              position: 'SF',
+              avatar: 'LJ',
               stats: [
-                { type: 'Points', line: 27.5, overOdds: 1.90, underOdds: 1.90 },
-                { type: 'Assists', line: 8.5, overOdds: 2.10, underOdds: 1.75 }
+                { type: 'Points', line: 27.5 },
+                { type: 'Assists', line: 8.5 }
               ]
             },
             {
               id: 'fallback_curry',
-              name: 'Stephen Curry', 
+              name: 'Stephen Curry',
               team: 'Warriors',
               position: 'PG',
-              avatar: 'SC', // Hard-coded: Avatar generation
+              avatar: 'SC',
               stats: [
-                { type: 'Points', line: 28.5, overOdds: 1.95, underOdds: 1.85 },
-                { type: '3-Pointers', line: 4.5, overOdds: 1.80, underOdds: 2.00 }
+                { type: 'Points', line: 28.5 },
+                { type: '3-Pointers', line: 4.5 }
               ]
             }
           ]
@@ -135,9 +161,9 @@ const DashboardScreen = ({ navigation }) => {
     if (sportKey === 'soccer_epl') {
       return [
         {
-          id: 'fallback_game2',
+          id: 'fallback_soccer_game1',
           homeTeam: 'Man City',
-          awayTeam: 'Liverpool', 
+          awayTeam: 'Liverpool',
           gameTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
           status: 'Upcoming',
           players: [
@@ -145,10 +171,98 @@ const DashboardScreen = ({ navigation }) => {
               id: 'fallback_haaland',
               name: 'Erling Haaland',
               team: 'Man City',
-              position: 'ST', // Hard-coded: Position data
-              avatar: 'EH', // Hard-coded: Avatar generation
+              position: 'ST',
+              avatar: 'EH',
               stats: [
-                { type: 'Goals', line: 1.5, overOdds: 1.85, underOdds: 1.95 }
+                { type: 'Goals', line: 1.5 },
+                { type: 'Shots on Target', line: 2.5 }
+              ]
+            },
+            {
+              id: 'fallback_salah',
+              name: 'Mohamed Salah',
+              team: 'Liverpool',
+              position: 'RW',
+              avatar: 'MS',
+              stats: [
+                { type: 'Goals', line: 1.5 },
+                { type: 'Assists', line: 0.5 }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'fallback_soccer_game2',
+          homeTeam: 'Arsenal',
+          awayTeam: 'Chelsea',
+          gameTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+          status: 'Upcoming',
+          players: [
+            {
+              id: 'fallback_saka',
+              name: 'Bukayo Saka',
+              team: 'Arsenal',
+              position: 'RW',
+              avatar: 'BS',
+              stats: [
+                { type: 'Shots on Target', line: 2.5 },
+                { type: 'Assists', line: 0.5 }
+              ]
+            }
+          ]
+        }
+      ];
+    }
+    
+    if (sportKey === 'americanfootball_nfl') {
+      return [
+        {
+          id: 'fallback_nfl_game1',
+          homeTeam: 'Chiefs',
+          awayTeam: 'Bills',
+          gameTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+          status: 'Upcoming',
+          players: [
+            {
+              id: 'fallback_mahomes',
+              name: 'Patrick Mahomes',
+              team: 'Chiefs',
+              position: 'QB',
+              avatar: 'PM',
+              stats: [
+                { type: 'Pass Yards', line: 267.5 },
+                { type: 'Pass Touchdowns', line: 1.5 }
+              ]
+            },
+            {
+              id: 'fallback_kelce',
+              name: 'Travis Kelce',
+              team: 'Chiefs',
+              position: 'TE',
+              avatar: 'TK',
+              stats: [
+                { type: 'Receiving Yards', line: 65.5 },
+                { type: 'Receptions', line: 5.5 }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'fallback_nfl_game2',
+          homeTeam: '49ers',
+          awayTeam: 'Cowboys',
+          gameTime: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+          status: 'Upcoming',
+          players: [
+            {
+              id: 'fallback_mccaffrey',
+              name: 'Christian McCaffrey',
+              team: '49ers',
+              position: 'RB',
+              avatar: 'CM',
+              stats: [
+                { type: 'Rush Yards', line: 87.5 },
+                { type: 'Receiving Yards', line: 31.5 }
               ]
             }
           ]
@@ -159,12 +273,10 @@ const DashboardScreen = ({ navigation }) => {
     return [];
   };
 
-  // Load initial data
   useEffect(() => {
     fetchGamesData(activeSport);
   }, []);
 
-  // Fetch new data when sport changes
   useEffect(() => {
     if (gamesData[activeSport]) {
       setLoading(false);
@@ -173,43 +285,41 @@ const DashboardScreen = ({ navigation }) => {
     }
   }, [activeSport]);
 
-  // Refresh data
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchGamesData(activeSport, true);
   };
 
-  // Convert API game data to component format
   const convertApiDataToProps = (games) => {
-    if (!games || !Array.isArray(games)) return [];
+    if (!games || !Array.isArray(games) || games.length === 0) {
+      return [];
+    }
     
     const props = [];
     
     games.forEach(game => {
-      if (!game.players || !Array.isArray(game.players)) return;
+      if (!game?.players || !Array.isArray(game.players)) return;
       
       game.players.forEach(player => {
-        if (!player.stats || !Array.isArray(player.stats)) return;
+        if (!player?.stats || !Array.isArray(player.stats)) return;
         
         player.stats.forEach(stat => {
           props.push({
-            id: `${game.id}_${player.id}_${stat.type}`,
+            id: `${game.id}_${player.id || player.name}_${stat.type}`,
             player: {
               name: player.name,
               team: player.team,
-              avatar: player.avatar || generatePlayerAvatar(player.name) // Fallback to generated avatar
+              avatar: player.avatar || generatePlayerAvatar(player.name)
             },
             match: {
               home: game.homeTeam,
               away: game.awayTeam,
-              time: formatGameTime(game.gameTime) // Convert ISO date to display format
+              time: formatGameTime(game.gameTime)
             },
             stat: stat.type,
             line: stat.line,
-            overOdds: stat.overOdds || 1.90, // Fallback odds if missing
-            underOdds: stat.underOdds || 1.90, // Fallback odds if missing
-            recentForm: generateMockRecentForm(stat.line, stat.type), // Hard-coded: Recent form data not available from API
-            gameStatus: game.status || 'Upcoming' // From API
+            recentForm: generateMockRecentForm(stat.line, stat.type),
+            gameStatus: game.status || 'Upcoming'
           });
         });
       });
@@ -218,9 +328,7 @@ const DashboardScreen = ({ navigation }) => {
     return props;
   };
 
-  // Generate player avatar from name (fallback when API doesn't provide)
   const generatePlayerAvatar = (playerName) => {
-    // Hard-coded: Avatar generation logic since API doesn't always provide avatars
     const nameParts = playerName.split(' ');
     if (nameParts.length >= 2) {
       return `${nameParts[0][0]}${nameParts[1][0]}`;
@@ -228,7 +336,6 @@ const DashboardScreen = ({ navigation }) => {
     return nameParts[0] ? `${nameParts[0][0]}?` : '??';
   };
 
-  // Format game time for display
   const formatGameTime = (gameTimeISO) => {
     const gameDate = new Date(gameTimeISO);
     const now = new Date();
@@ -249,10 +356,7 @@ const DashboardScreen = ({ navigation }) => {
     }
   };
 
-  // Generate mock recent form data
   const generateMockRecentForm = (line, statType) => {
-    // Hard-coded: Recent form data - not available from TheOddsAPI
-    // This would typically come from a separate stats API
     const variance = statType.includes('Goals') ? line * 0.4 : line * 0.3;
     const form = [];
     
@@ -265,24 +369,19 @@ const DashboardScreen = ({ navigation }) => {
     return form;
   };
 
-  // Get current sport data
   const getCurrentSportData = () => {
-    const currentGames = gamesData[activeSport] || [];
-    return convertApiDataToProps(currentGames);
+    const data = gamesData[activeSport];
+    
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return [];
+    }
+    
+    return convertApiDataToProps(data);
   };
 
   const getMultiplier = (numSelections) => {
     const multipliers = betMode === 'beast' ? beastMultipliers : safetyMultipliers;
     return multipliers[numSelections] || multipliers[10];
-  };
-
-  const getSafetyPlayRules = (numPicks) => {
-    // Hard-coded: Safety play rules logic
-    if (numPicks <= 2) return { description: "All picks must win" };
-    if (numPicks <= 4) return { description: "Can lose 1 pick" };
-    if (numPicks <= 6) return { description: "Can lose up to 2 picks" };
-    if (numPicks <= 8) return { description: "Can lose up to 3 picks" };
-    return { description: "Can lose up to 4 picks" };
   };
 
   const addToBettingSlip = (prop, selection) => {
@@ -311,28 +410,8 @@ const DashboardScreen = ({ navigation }) => {
     }
   };
 
-  const removeBetFromSlip = (propId) => {
-    setBettingSlip(bettingSlip.filter(bet => bet.propId !== propId));
-  };
-
   const clearBettingSlip = () => {
     setBettingSlip([]);
-  };
-
-  const calculatePotentialWin = () => {
-    if (bettingSlip.length < 2) return 0;
-    const multiplier = getMultiplier(bettingSlip.length);
-    
-    // Use actual odds from API
-    const totalOdds = bettingSlip.reduce((total, bet) => total * bet.odds, 1);
-    
-    if (betMode === 'beast') {
-      return (betAmount * totalOdds * multiplier).toFixed(2);
-    } else {
-      const fullPayout = betAmount * totalOdds * multiplier;
-      const minPayout = fullPayout * 0.25;
-      return { max: fullPayout.toFixed(2), min: minPayout.toFixed(2) };
-    }
   };
 
   const calculateAverageForForm = (form) => {
@@ -356,27 +435,37 @@ const DashboardScreen = ({ navigation }) => {
     setShowBettingSlip(true);
   };
 
-  // Sport button mapping
+  // UPDATED: Handle card click to show player details modal
+  const handleCardClick = (prop) => {
+    setSelectedProp(prop);
+    setShowPlayerModal(true);
+  };
+
+  // Sport button mapping - UPDATED: reduced available width
   const sportButtons = [
     { key: 'soccer_epl', label: 'Football', available: true },
     { key: 'basketball_nba', label: 'Basketball', available: true },
     { key: 'americanfootball_nfl', label: 'NFL', available: true },
-    { key: 'tennis', label: 'Tennis', available: false }, // Hard-coded: Not available yet
-    { key: 'golf', label: 'Golf', available: false }, // Hard-coded: Not available yet
-    { key: 'cricket', label: 'Cricket', available: false } // Hard-coded: Not available yet
+    { key: 'tennis', label: 'Tennis', available: false },
+    { key: 'golf', label: 'Golf', available: false },
+    { key: 'cricket', label: 'Cricket', available: false }
   ];
 
+  // UPDATED: Simplified PlayerPropCard without recent form data
   const PlayerPropCard = ({ prop }) => {
     const selectedBet = bettingSlip.find(bet => bet.propId === prop.id);
     const isOverSelected = selectedBet?.selection === 'over';
     const isUnderSelected = selectedBet?.selection === 'under';
-    const avgForm = calculateAverageForForm(prop.recentForm);
 
     return (
-      <View style={[
-        styles.propCard, 
-        selectedBet && styles.propCardSelected
-      ]}>
+      <TouchableOpacity 
+        style={[
+          styles.propCard, 
+          selectedBet && styles.propCardSelected
+        ]}
+        onPress={() => handleCardClick(prop)}
+        activeOpacity={0.8}
+      >
         {/* Match Header */}
         <LinearGradient
           colors={['#0f172a', '#1e293b']}
@@ -413,7 +502,7 @@ const DashboardScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Stat Details */}
+          {/* SIMPLIFIED: Stat Details without recent form */}
           <LinearGradient
             colors={['#0f172a', '#1e293b']}
             style={styles.statSection}
@@ -424,44 +513,20 @@ const DashboardScreen = ({ navigation }) => {
                 <Text style={styles.lineText}>{prop.line}</Text>
                 <Text style={styles.lineLabel}>LINE</Text>
               </View>
-              <View style={styles.avgSection}>
-                <Text style={styles.avgLabel}>L5 Average</Text>
-                <Text style={[
-                  styles.avgValue,
-                  { color: parseFloat(avgForm) > prop.line ? '#10b981' : '#ef4444' }
-                ]}>
-                  {avgForm}
-                </Text>
-              </View>
-            </View>
-            
-            {/* Recent Form */}
-            <View style={styles.formSection}>
-              <Text style={styles.formLabel}>L5:</Text>
-              <View style={styles.formBadges}>
-                {prop.recentForm.map((value, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.formBadge,
-                      { backgroundColor: value > prop.line ? '#059669' : '#dc2626' }
-                    ]}
-                  >
-                    <Text style={styles.formValue}>{value}</Text>
-                  </View>
-                ))}
-              </View>
             </View>
           </LinearGradient>
 
-          {/* Betting Options with Real Odds */}
+          {/* Betting Options */}
           <View style={styles.bettingOptions}>
             <TouchableOpacity
               style={[
                 styles.bettingButton,
                 isOverSelected && styles.bettingButtonSelected
               ]}
-              onPress={() => addToBettingSlip(prop, 'over')}
+              onPress={(e) => {
+                e.stopPropagation();
+                addToBettingSlip(prop, 'over');
+              }}
             >
               <Text style={[
                 styles.bettingButtonText,
@@ -469,7 +534,6 @@ const DashboardScreen = ({ navigation }) => {
               ]}>
                 OVER
               </Text>
-              <Text style={styles.oddsText}>{prop.overOdds}</Text>
               {isOverSelected && (
                 <View style={styles.selectedIndicator}>
                   <View style={styles.checkmark}>
@@ -485,7 +549,10 @@ const DashboardScreen = ({ navigation }) => {
                 styles.bettingButton,
                 isUnderSelected && styles.bettingButtonSelected
               ]}
-              onPress={() => addToBettingSlip(prop, 'under')}
+              onPress={(e) => {
+                e.stopPropagation();
+                addToBettingSlip(prop, 'under');
+              }}
             >
               <Text style={[
                 styles.bettingButtonText,
@@ -493,7 +560,6 @@ const DashboardScreen = ({ navigation }) => {
               ]}>
                 UNDER
               </Text>
-              <Text style={styles.oddsText}>{prop.underOdds}</Text>
               {isUnderSelected && (
                 <View style={styles.selectedIndicator}>
                   <View style={styles.checkmark}>
@@ -505,11 +571,170 @@ const DashboardScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
-  // Loading component
+  // NEW: Player Details Modal Component
+  const PlayerDetailsModal = () => {
+    if (!selectedProp) return null;
+
+    const avgForm = calculateAverageForForm(selectedProp.recentForm);
+    const isAboveLine = parseFloat(avgForm) > selectedProp.line;
+
+    return (
+      <Modal
+        visible={showPlayerModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPlayerModal(false)}
+      >
+        <SafeAreaView style={styles.playerModal}>
+          {/* Modal Header */}
+          <LinearGradient colors={['#7c3aed', '#2563eb']} style={styles.playerModalHeader}>
+            <View style={styles.playerModalHeaderContent}>
+              <View style={styles.playerModalInfo}>
+                <LinearGradient
+                  colors={['#6366f1', '#3b82f6']}
+                  style={styles.playerModalAvatar}
+                >
+                  <Text style={styles.playerModalAvatarText}>{selectedProp.player.avatar}</Text>
+                </LinearGradient>
+                <View>
+                  <Text style={styles.playerModalName}>{selectedProp.player.name}</Text>
+                  <Text style={styles.playerModalTeam}>{selectedProp.player.team}</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.playerModalClose}
+                onPress={() => setShowPlayerModal(false)}
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+
+          <ScrollView style={styles.playerModalContent}>
+            {/* Match Info */}
+            <View style={styles.playerModalSection}>
+              <Text style={styles.playerModalSectionTitle}>Match Details</Text>
+              <LinearGradient colors={['#1f2937', '#111827']} style={styles.playerModalCard}>
+                <View style={styles.matchDetailsRow}>
+                  <Text style={styles.matchDetailsLabel}>Match:</Text>
+                  <Text style={styles.matchDetailsValue}>
+                    {selectedProp.match.home} vs {selectedProp.match.away}
+                  </Text>
+                </View>
+                <View style={styles.matchDetailsRow}>
+                  <Text style={styles.matchDetailsLabel}>Time:</Text>
+                  <Text style={styles.matchDetailsValue}>{selectedProp.match.time}</Text>
+                </View>
+                <View style={styles.matchDetailsRow}>
+                  <Text style={styles.matchDetailsLabel}>Status:</Text>
+                  <Text style={styles.matchDetailsValue}>{selectedProp.gameStatus}</Text>
+                </View>
+              </LinearGradient>
+            </View>
+
+            {/* Stat Analysis */}
+            <View style={styles.playerModalSection}>
+              <Text style={styles.playerModalSectionTitle}>{selectedProp.stat} Analysis</Text>
+              <LinearGradient colors={['#1f2937', '#111827']} style={styles.playerModalCard}>
+                <View style={styles.statAnalysisHeader}>
+                  <View style={styles.statAnalysisMain}>
+                    <Text style={styles.statAnalysisLine}>{selectedProp.line}</Text>
+                    <Text style={styles.statAnalysisLabel}>BETTING LINE</Text>
+                  </View>
+                  <View style={styles.statAnalysisAvg}>
+                    <Text style={[
+                      styles.statAnalysisAvgValue,
+                      { color: isAboveLine ? '#10b981' : '#ef4444' }
+                    ]}>
+                      {avgForm}
+                    </Text>
+                    <Text style={styles.statAnalysisAvgLabel}>L5 AVERAGE</Text>
+                  </View>
+                </View>
+
+                {/* Performance Indicator */}
+                <View style={styles.performanceIndicator}>
+                  <View style={[
+                    styles.performanceBar,
+                    { backgroundColor: isAboveLine ? '#10b981' : '#ef4444' }
+                  ]}>
+                    <Text style={styles.performanceText}>
+                      {isAboveLine ? 'TRENDING OVER' : 'TRENDING UNDER'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Recent Form */}
+                <View style={styles.recentFormSection}>
+                  <Text style={styles.recentFormTitle}>Last 5 Games Performance</Text>
+                  <View style={styles.recentFormGrid}>
+                    {selectedProp.recentForm.map((value, index) => (
+                      <View key={index} style={styles.formGameCard}>
+                        <Text style={styles.formGameNumber}>Game {5-index}</Text>
+                        <Text style={[
+                          styles.formGameValue,
+                          { color: value > selectedProp.line ? '#10b981' : '#ef4444' }
+                        ]}>
+                          {value}
+                        </Text>
+                        <View style={[
+                          styles.formGameIndicator,
+                          { backgroundColor: value > selectedProp.line ? '#10b981' : '#ef4444' }
+                        ]}>
+                          <Ionicons 
+                            name={value > selectedProp.line ? "trending-up" : "trending-down"} 
+                            size={10} 
+                            color="white" 
+                          />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
+
+            {/* Quick Actions */}
+            <View style={styles.playerModalSection}>
+              <Text style={styles.playerModalSectionTitle}>Quick Actions</Text>
+              <View style={styles.quickActions}>
+                <TouchableOpacity
+                  style={styles.quickActionButton}
+                  onPress={() => {
+                    addToBettingSlip(selectedProp, 'over');
+                    setShowPlayerModal(false);
+                  }}
+                >
+                  <LinearGradient colors={['#10b981', '#059669']} style={styles.quickActionGradient}>
+                    <Ionicons name="trending-up" size={20} color="white" />
+                    <Text style={styles.quickActionText}>Bet Over {selectedProp.line}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.quickActionButton}
+                  onPress={() => {
+                    addToBettingSlip(selectedProp, 'under');
+                    setShowPlayerModal(false);
+                  }}
+                >
+                  <LinearGradient colors={['#ef4444', '#dc2626']} style={styles.quickActionGradient}>
+                    <Ionicons name="trending-down" size={20} color="white" />
+                    <Text style={styles.quickActionText}>Bet Under {selectedProp.line}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+    );
+  };
+
   const LoadingView = () => (
     <View style={styles.loadingContainer}>
       <ActivityIndicator size="large" color="#2563eb" />
@@ -517,7 +742,6 @@ const DashboardScreen = ({ navigation }) => {
     </View>
   );
 
-  // Error component
   const ErrorView = () => (
     <View style={styles.errorContainer}>
       <Ionicons name="alert-circle" size={48} color="#ef4444" />
@@ -572,7 +796,7 @@ const DashboardScreen = ({ navigation }) => {
           />
         }
       >
-        {/* Sports Navigation */}
+        {/* UPDATED: Sports Navigation with smaller buttons */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -613,7 +837,7 @@ const DashboardScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Content based on loading/error state */}
+        {/* Content */}
         {loading ? (
           <LoadingView />
         ) : error && (!gamesData[activeSport] || gamesData[activeSport].length === 0) ? (
@@ -634,6 +858,9 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
+
+      {/* Player Details Modal */}
+      <PlayerDetailsModal />
 
       {/* Enhanced Betting Slip FAB */}
       {bettingSlip.length > 0 && (
@@ -663,14 +890,13 @@ const DashboardScreen = ({ navigation }) => {
         </TouchableOpacity>
       )}
 
-      {/* Betting Slip Modal - Rest of modal code remains the same */}
+      {/* Betting Slip Modal */}
       <Modal
         visible={showBettingSlip}
         animationType="slide"
         presentationStyle="pageSheet"
       >
         <SafeAreaView style={styles.modal}>
-          {/* Modal content remains the same as original code */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
               Parlay Builder ({bettingSlip.length} Picks)
@@ -688,9 +914,7 @@ const DashboardScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-
           <ScrollView style={styles.modalContent}>
-            {/* Rest of the modal content remains the same */}
             {bettingSlip.length < 2 && (
               <View style={styles.warningCard}>
                 <Ionicons name="alert-circle" size={18} color="#fca5a5" />
@@ -702,8 +926,6 @@ const DashboardScreen = ({ navigation }) => {
                 </View>
               </View>
             )}
-
-            {/* Continue with rest of modal JSX... */}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -737,7 +959,7 @@ const DashboardScreen = ({ navigation }) => {
 const styles = {
   container: { flex: 1, backgroundColor: '#000' },
   
-  // Header - same as before
+  // Header
   header: { paddingHorizontal: 20, paddingVertical: 20 },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   logoSection: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
@@ -753,17 +975,17 @@ const styles = {
 
   content: { flex: 1, paddingTop: 20 },
   
-  // Sports Navigation - Updated
-  sportsNav: { paddingHorizontal: 20, gap: 8, marginBottom: 24 },
-  sportButton: { paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#1f2937', borderRadius: 8, minWidth: 100, alignItems: 'center' },
+  // UPDATED: Sports Navigation with smaller buttons
+  sportsNav: { paddingHorizontal: 20, gap: 6, marginBottom: 24 },
+  sportButton: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#1f2937', borderRadius: 6, minWidth: 70, alignItems: 'center' },
   sportButtonActive: { backgroundColor: '#2563eb' },
   sportButtonDisabled: { backgroundColor: '#374151', opacity: 0.6 },
-  sportButtonText: { fontSize: 14, fontWeight: '600', color: '#9ca3af', textAlign: 'center' },
+  sportButtonText: { fontSize: 12, fontWeight: '600', color: '#9ca3af', textAlign: 'center' },
   sportButtonTextActive: { color: 'white' },
   sportButtonTextDisabled: { color: '#6b7280' },
-  comingSoonText: { fontSize: 10, color: '#9ca3af', marginTop: 2 },
+  comingSoonText: { fontSize: 8, color: '#9ca3af', marginTop: 1 },
   
-  // Search - same as before
+  // Search
   searchContainer: { position: 'relative', marginBottom: 24, marginHorizontal: 20 },
   searchIcon: { position: 'absolute', left: 16, top: 12, zIndex: 1 },
   searchInput: { backgroundColor: '#1f2937', borderWidth: 1, borderColor: '#374151', borderRadius: 8, paddingLeft: 48, paddingRight: 16, paddingVertical: 12, color: 'white', fontSize: 14 },
@@ -782,11 +1004,11 @@ const styles = {
   noDataText: { fontSize: 16, color: 'white', marginBottom: 8 },
   noDataSubtext: { fontSize: 14, color: '#9ca3af', textAlign: 'center' },
   
-  // Props Section - same as before with additions
+  // Props Section
   propsSection: { marginBottom: 80, paddingHorizontal: 20 },
   propsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
   
-  // Player Prop Card - Updated with odds display
+  // UPDATED: Player Prop Card - Simplified without recent form
   propCard: { backgroundColor: '#374151', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#4b5563', width: '48%' },
   propCardSelected: { borderColor: '#3b82f6', borderWidth: 2, backgroundColor: '#1e3a8a' },
   propCardHeader: { paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#475569' },
@@ -806,34 +1028,89 @@ const styles = {
   playerLastName: { fontSize: 14, fontWeight: '700', color: 'white', textAlign: 'left', lineHeight: 16 },
   playerTeam: { fontSize: 11, fontWeight: '500', color: '#94a3b8', textAlign: 'left' },
   
+  // UPDATED: Simplified stat section
   statSection: { borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#334155' },
   statLabel: { fontSize: 11, color: '#94a3b8', marginBottom: 6, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  lineSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  lineSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   lineNumber: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
   lineText: { fontSize: 20, fontWeight: '900', color: 'white' },
   lineLabel: { fontSize: 10, color: '#60a5fa', fontWeight: '600' },
-  avgSection: { alignItems: 'flex-end' },
-  avgLabel: { fontSize: 9, color: '#64748b', marginBottom: 1 },
-  avgValue: { fontSize: 12, fontWeight: 'bold' },
   
-  formSection: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  formLabel: { fontSize: 9, color: '#64748b', fontWeight: '600' },
-  formBadges: { flexDirection: 'row', gap: 2, flex: 1, flexWrap: 'wrap' },
-  formBadge: { width: 18, height: 18, borderRadius: 3, justifyContent: 'center', alignItems: 'center' },
-  formValue: { fontSize: 8, color: 'white', fontWeight: 'bold' },
+  // NEW: Details button
+  detailsButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(59, 130, 246, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  detailsButtonText: { fontSize: 9, color: '#60a5fa', fontWeight: '600' },
   
   bettingOptions: { flexDirection: 'row', gap: 6 },
   bettingButton: { flex: 1, paddingVertical: 10, paddingHorizontal: 4, backgroundColor: '#4b5563', borderWidth: 1, borderColor: '#6b7280', borderRadius: 6, alignItems: 'center', minHeight: 60, justifyContent: 'center' },
   bettingButtonSelected: { backgroundColor: '#059669', borderColor: '#10b981' },
   bettingButtonText: { fontSize: 12, fontWeight: '600', color: 'white', marginBottom: 2 },
   bettingButtonTextSelected: { fontWeight: '700' },
-  oddsText: { fontSize: 10, color: '#9ca3af', fontWeight: '500' }, // New: Display odds
+  oddsText: { fontSize: 10, color: '#9ca3af', fontWeight: '500' },
   
   selectedIndicator: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 1 },
   checkmark: { width: 8, height: 8, backgroundColor: 'white', borderRadius: 4, justifyContent: 'center', alignItems: 'center' },
   selectedText: { fontSize: 8, color: 'white' },
   
-  // FAB and Modal styles remain the same as before...
+  // NEW: Player Details Modal Styles
+  playerModal: { flex: 1, backgroundColor: '#000' },
+  playerModalHeader: { paddingHorizontal: 20, paddingVertical: 16 },
+  playerModalHeaderContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  playerModalInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  playerModalAvatar: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
+  playerModalAvatarText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
+  playerModalName: { fontSize: 20, fontWeight: 'bold', color: 'white' },
+  playerModalTeam: { fontSize: 14, color: 'rgba(255,255,255,0.8)' },
+  playerModalClose: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 8, borderRadius: 20 },
+  
+  playerModalContent: { flex: 1, padding: 20 },
+  playerModalSection: { marginBottom: 24 },
+  playerModalSectionTitle: { fontSize: 18, fontWeight: 'bold', color: 'white', marginBottom: 12 },
+  playerModalCard: { borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#374151' },
+  
+  // Match Details
+  matchDetailsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  matchDetailsLabel: { fontSize: 14, color: '#9ca3af' },
+  matchDetailsValue: { fontSize: 14, fontWeight: '600', color: 'white' },
+  
+  // Stat Analysis
+  statAnalysisHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  statAnalysisMain: { alignItems: 'center' },
+  statAnalysisLine: { fontSize: 36, fontWeight: 'bold', color: 'white' },
+  statAnalysisLabel: { fontSize: 12, color: '#60a5fa', fontWeight: '600' },
+  statAnalysisAvg: { alignItems: 'center' },
+  statAnalysisAvgValue: { fontSize: 24, fontWeight: 'bold' },
+  statAnalysisAvgLabel: { fontSize: 12, color: '#9ca3af', fontWeight: '600' },
+  
+  // Performance Indicator
+  performanceIndicator: { marginBottom: 16 },
+  performanceBar: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, alignItems: 'center' },
+  performanceText: { fontSize: 12, fontWeight: 'bold', color: 'white' },
+  
+  // Recent Form
+  recentFormSection: { marginBottom: 16 },
+  recentFormTitle: { fontSize: 16, fontWeight: 'bold', color: 'white', marginBottom: 12 },
+  recentFormGrid: { flexDirection: 'row', gap: 8 },
+  formGameCard: { flex: 1, backgroundColor: '#374151', borderRadius: 8, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#4b5563' },
+  formGameNumber: { fontSize: 10, color: '#9ca3af', marginBottom: 4 },
+  formGameValue: { fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
+  formGameIndicator: { width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  
+  // Betting Analysis
+  bettingAnalysisSection: {},
+  bettingAnalysisTitle: { fontSize: 16, fontWeight: 'bold', color: 'white', marginBottom: 12 },
+  oddsComparison: { flexDirection: 'row', gap: 12 },
+  oddsOption: { flex: 1, backgroundColor: '#374151', borderRadius: 8, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#4b5563' },
+  oddsOptionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 4 },
+  oddsOptionValue: { fontSize: 24, fontWeight: 'bold', color: 'white', marginBottom: 4 },
+  oddsOptionPayout: { fontSize: 10, color: '#60a5fa' },
+  
+  // Quick Actions
+  quickActions: { flexDirection: 'row', gap: 12 },
+  quickActionButton: { flex: 1 },
+  quickActionGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 12, borderRadius: 8, gap: 8 },
+  quickActionText: { fontSize: 14, fontWeight: '600', color: 'white' },
+  
+  // FAB
   fab: { 
     position: 'absolute', 
     bottom: 70, 
@@ -868,7 +1145,7 @@ const styles = {
     fontWeight: 'bold',
   },
   
-  // Modal styles remain the same...
+  // Modal styles
   modal: { flex: 1, backgroundColor: '#111827' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#1f2937', borderBottomWidth: 1, borderBottomColor: '#374151' },
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: 'white' },
@@ -884,7 +1161,7 @@ const styles = {
   warningTitle: { color: '#fca5a5', fontSize: 14, fontWeight: 'bold' },
   warningSubtext: { color: '#fca5a5', fontSize: 12, opacity: 0.9 },
   
-  // Bottom Navigation - same as before
+  // Bottom Navigation
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#111827', borderTopWidth: 1, borderTopColor: '#374151', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12 },
   navItem: { alignItems: 'center', gap: 4 },
   navText: { fontSize: 10, color: '#9ca3af' },
